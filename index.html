@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>しんしのおしたく</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -2010,7 +2013,9 @@ function normalizeState(s){
     });
   }
   const today=new Date().toDateString();
-  if(s.date!==today){s.date=today;s.approvedToday=false;s.tasks=Object.fromEntries(TASKS.map(t=>[t.id,false]));}
+  const isNewDay=s.date!==today;
+  if(isNewDay){s.date=today;s.approvedToday=false;s.tasks=Object.fromEntries(TASKS.map(t=>[t.id,false]));}
+  if(isNewDay&&s.pendingEvent<0&&shouldRepeatPoliceEvent(s))s.pendingEvent=stageIndexById('police');
   return s;
 }
 function loadState(){
@@ -2082,6 +2087,13 @@ function addBurnedHouseIssue(stageIdx){
 function hasVehicle(id){
   const idx=STAGES.findIndex(x=>x.id===id);
   return idx>=0&&state.stage>idx;
+}
+
+function shouldRepeatPoliceEvent(s){
+  const policeIdx=stageIndexById('police');
+  if(policeIdx<0||s.stage<=policeIdx)return false;
+  const stationBuilt=(s.townIssues||[]).some(issue=>issue.type==='police-station'&&issue.state==='built');
+  return !stationBuilt;
 }
 
 function resolveBurnedHouseIssues(){
