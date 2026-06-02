@@ -52,11 +52,12 @@
     .node-label  { position: absolute; z-index: 5; font-size: 13px; font-weight: bold; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.55); white-space: nowrap; pointer-events: none; text-align: center; }
     .node-track  { position: absolute; z-index: 5; height: 8px; background: rgba(255,255,255,.3); border-radius: 4px; overflow: hidden; }
     .node-fill   { height: 100%; background: #FF6B35; border-radius: 4px; transition: width .5s; }
-    .map-place { position:absolute; z-index:3; min-width:116px; max-width:150px; padding:8px 10px 10px; border-radius:14px; background:rgba(255,255,255,.68); border:3px solid rgba(255,255,255,.75); box-shadow:0 3px 10px rgba(0,0,0,.12); pointer-events:none; }
-    .map-place-title { display:flex; align-items:center; gap:5px; font-size:12px; font-weight:bold; color:#2F3A3D; white-space:nowrap; }
-    .map-place-icon { width:24px; height:24px; flex:0 0 auto; }
+    .map-place { position:absolute; z-index:3; width:52px; height:52px; padding:7px; border-radius:18px; background:rgba(255,255,255,.72); border:3px solid rgba(255,255,255,.78); box-shadow:0 3px 10px rgba(0,0,0,.12); pointer-events:none; }
+    .map-place-title { display:flex; align-items:center; justify-content:center; }
+    .map-place-title span { display:none; }
+    .map-place-icon { width:34px; height:34px; flex:0 0 auto; }
     .map-place-icon svg { width:100%; height:100%; display:block; }
-    .map-place-note { margin-top:4px; font-size:10px; line-height:1.15; color:#52705A; font-weight:bold; }
+    .map-place-note { display:none; }
     .scenery-item { position:absolute; z-index:2; pointer-events:none; filter:drop-shadow(0 2px 3px rgba(0,0,0,.16)); }
     .tree { width:24px; height:31px; }
     .tree::before { content:''; position:absolute; left:3px; top:0; width:18px; height:20px; border-radius:50% 50% 45% 45%; background:#4F9F52; border:2px solid #2F6F36; }
@@ -309,7 +310,7 @@
     </div>
     <button class="hero-btn orange" id="hero-btn" onclick="heroAction()"></button>
     <div class="nearby-panel hidden" id="nearby-panel">
-      <div class="nearby-title">ちかくでおこっていること</div>
+      <div class="nearby-title">おこっていること</div>
       <div class="nearby-list" id="nearby-list"></div>
     </div>
   </div>
@@ -497,7 +498,7 @@ const STAGES = [
 
 const WORLDS=[
   {name:'まちのヒーロー',  emoji:'🏙️',bg:'linear-gradient(to bottom,#bbdefb,#e3f2fd)'},
-  {name:'こうじ現場',      emoji:'🏗️',bg:'linear-gradient(to bottom,#ffe0b2,#fff3e0)'},
+  {name:'こうじげんば',    emoji:'🏗️',bg:'linear-gradient(to bottom,#ffe0b2,#fff3e0)'},
   {name:'はたらくしゃりょう',emoji:'🛣️',bg:'linear-gradient(to bottom,#c8e6c9,#e8f5e9)'},
   {name:'とくしゅしゃりょう',emoji:'🌨️',bg:'linear-gradient(to bottom,#bbdefb,#e8eaf6)'},
   {name:'でかい！すごい！',emoji:'🌟',bg:'linear-gradient(to bottom,#f8bbd0,#fce4ec)'},
@@ -2265,11 +2266,11 @@ function renderMapScenery(content){
 
 function renderMapPlaces(content){
   const places=[
-    {idx:0,icon:'🏠',title:'住宅地',note:'火事のあとをなおそう',dx:34,dy:-52},
-    {idx:1,icon:'🏢',title:'けいさつエリア',note:'まちをまもる場所',dx:-96,dy:-52},
-    {idx:2,icon:'🏥',title:'びょういん予定地',note:'けが人を助ける場所',dx:34,dy:-52},
-    {idx:4,icon:'🚧',title:'こうじ現場',note:'町をつくる車が活躍',dx:34,dy:-48},
-    {idx:6,icon:'🏗️',title:'建設エリア',note:'建物をたてよう',dx:34,dy:-48}
+    {idx:0,icon:'🏠',title:'おうち',note:'あとでなおそう',dx:34,dy:-52},
+    {idx:1,icon:'🏢',title:'けいさつ',note:'まちをまもる',dx:-42,dy:-52},
+    {idx:2,icon:'🏥',title:'びょういん',note:'けがをなおす',dx:34,dy:-52},
+    {idx:4,icon:'🚧',title:'こうじ',note:'まちをつくる',dx:34,dy:-48},
+    {idx:6,icon:'🏗️',title:'たてる',note:'くれーんでたてる',dx:34,dy:-48}
   ];
   places.forEach(p=>{
     const xp=xpct(p.idx),el=document.createElement('div');
@@ -2300,7 +2301,7 @@ function renderTownIssues(content){
 function townIssueMeta(issue){
   if(issue.type==='burned-house'&&issue.state==='burned')return{icon:'🏚️',label:'あとでなおす',title:'もえたおうちが<br>まだのこっているよ'};
   if(issue.type==='police-risk'&&issue.state==='risk')return{icon:'🦹',label:'またでるかも',title:'どろぼうが<br>またくるかも'};
-  if(issue.type==='police-risk'&&issue.state==='lot')return{icon:'🚧',label:'けいさつしょ予定地',title:'けいさつしょの<br>じゅんびちゅう'};
+  if(issue.type==='police-risk'&&issue.state==='lot')return{icon:'🚧',label:'よていち',title:'けいさつしょの<br>じゅんびちゅう'};
   if(issue.type==='police-station'&&issue.state==='built')return{icon:'🏢',label:'けいさつしょ',title:'けいさつしょ<br>かんせい！'};
   if(issue.type==='hospital-needed')return{icon:'🤕',label:'びょういんがいる',title:'びょういんが<br>まだないよ'};
   if(issue.type==='transit-needed')return{icon:'🎯',label:'のりばがいる',title:'のりばが<br>まだないよ'};
@@ -2321,12 +2322,12 @@ function showTownIssuePopup(issueId){
 
 function townIssueBody(issue,canRepair){
   if(canRepair)return'しょべるかーをゲットしたね！<br>こわれたおうちをかたづけて<br>まちをなおそう。';
-  if(issue.type==='burned-house')return'しょうぼうしゃが火をけしてくれたね！<br>でも、こわれたおうちは<br><strong style="color:#FFE66D">しょべるかー</strong>がきたらかたづけられるよ。';
-  if(issue.type==='police-risk'&&issue.state==='risk')return'ぱとかーがどろぼうをおいはらったよ。<br>でも、けいさつしょがないから<br><strong style="color:#FFE66D">ぶるどーざー</strong>がきたら土地をつくろう。';
-  if(issue.type==='police-risk'&&issue.state==='lot')return'けいさつしょの土地ができたよ。<br>つぎは<strong style="color:#FFE66D">くれーんしゃ</strong>で<br>けいさつしょをたてよう。';
+  if(issue.type==='burned-house')return'しょうぼうしゃがひをけしてくれたね！<br>でも、こわれたおうちは<br><strong style="color:#FFE66D">しょべるかー</strong>がきたらかたづけられるよ。';
+  if(issue.type==='police-risk'&&issue.state==='risk')return'ぱとかーがどろぼうをおいはらったよ。<br>でも、けいさつしょがないから<br><strong style="color:#FFE66D">ぶるどーざー</strong>がきたらばしょをつくろう。';
+  if(issue.type==='police-risk'&&issue.state==='lot')return'けいさつしょのばしょができたよ。<br>つぎは<strong style="color:#FFE66D">くれーんしゃ</strong>で<br>けいさつしょをたてよう。';
   if(issue.type==='police-station')return'けいさつしょができたよ！<br>これでどろぼうがきても<br>まちをまもれるね。';
-  if(issue.type==='hospital-needed')return'きゅうきゅうしゃが助けてくれたね。<br>でも、まちにはまだ<br><strong style="color:#FFE66D">びょういん</strong>がひつようだよ。';
-  if(issue.type==='transit-needed')return'たくしーが送ってくれたね。<br>でも、みんなが迷わないように<br><strong style="color:#FFE66D">のりば</strong>がほしいね。';
+  if(issue.type==='hospital-needed')return'きゅうきゅうしゃがたすけてくれたね。<br>でも、まちにはまだ<br><strong style="color:#FFE66D">びょういん</strong>がひつようだよ。';
+  if(issue.type==='transit-needed')return'たくしーがおくってくれたね。<br>でも、みんながまよわないように<br><strong style="color:#FFE66D">のりば</strong>がほしいね。';
   return'あとでべつのくるまがきたら<br>なにかできるかもしれないよ。';
 }
 
@@ -2556,7 +2557,7 @@ function evFire(c,W,fi,ti,ax,ay,fx,fy,done){
   const fires=fireSpots.map(([ox,oy,sz],i)=>{
     const f=ea(c,fx+ox,fy+oy,sz,'🔥',`animation:firePulse .38s ease-in-out infinite ${i*.06}s`);
     f.style.pointerEvents='auto';f.style.cursor='pointer';
-    f.setAttribute('aria-label','火をけす');
+    f.setAttribute('aria-label','ひをけす');
     f.addEventListener('click',()=>{
       if(finished||f.dataset.out)return;
       f.dataset.out='1';soundWater();
@@ -2573,7 +2574,7 @@ function evFire(c,W,fi,ti,ax,ay,fx,fy,done){
   const car=eaCar(c,ax,ay,58,'fire','transition:left .9s ease,top .9s ease');
   soundSiren();
   setTimeout(()=>moveEl(car,fx-34,fy,58),80);
-  setTimeout(()=>speak('火をタップして、ぜんぶけそう。'),900);
+  setTimeout(()=>speak('ひをタップして、ぜんぶけそう。'),900);
 
   function finishFire(){
     if(finished)return;finished=true;stopFireSound();
