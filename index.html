@@ -23,7 +23,9 @@
     .tb-garage svg { width:44px; height:40px; display:block; filter:drop-shadow(0 1px 2px rgba(0,0,0,.25)); }
     .map-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
     .map-content { position: relative; width: 100%; }
-    .map-svg { position: absolute; top: 0; left: 0; width: 100%; pointer-events: none; }
+    .hidden { display:none !important; }
+    .map-svg { position: absolute; top: 0; left: 0; width: 100%; pointer-events: none; z-index:2; }
+    .scenery-svg { position:absolute; inset:0 0 auto 0; width:100%; pointer-events:none; z-index:1; }
     .world-bg { position: absolute; left: 0; right: 0; }
     .world-banner { position: absolute; left: 8px; right: 8px; background: rgba(0,0,0,.38); backdrop-filter: blur(4px); border-radius: 14px; padding: 8px 16px; display: flex; align-items: center; gap: 10px; }
     .wb-icon { width:28px; height:28px; display:block; flex:0 0 auto; }
@@ -47,6 +49,17 @@
     .node-label  { position: absolute; z-index: 5; font-size: 13px; font-weight: bold; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.55); white-space: nowrap; pointer-events: none; text-align: center; }
     .node-track  { position: absolute; z-index: 5; height: 8px; background: rgba(255,255,255,.3); border-radius: 4px; overflow: hidden; }
     .node-fill   { height: 100%; background: #FF6B35; border-radius: 4px; transition: width .5s; }
+    .map-place { position:absolute; z-index:3; min-width:116px; max-width:150px; padding:8px 10px 10px; border-radius:14px; background:rgba(255,255,255,.68); border:3px solid rgba(255,255,255,.75); box-shadow:0 3px 10px rgba(0,0,0,.12); pointer-events:none; }
+    .map-place-title { display:flex; align-items:center; gap:5px; font-size:12px; font-weight:bold; color:#2F3A3D; white-space:nowrap; }
+    .map-place-icon { width:24px; height:24px; flex:0 0 auto; }
+    .map-place-icon svg { width:100%; height:100%; display:block; }
+    .map-place-note { margin-top:4px; font-size:10px; line-height:1.15; color:#52705A; font-weight:bold; }
+    .scenery-item { position:absolute; z-index:2; pointer-events:none; filter:drop-shadow(0 2px 3px rgba(0,0,0,.16)); }
+    .tree { width:24px; height:31px; }
+    .tree::before { content:''; position:absolute; left:3px; top:0; width:18px; height:20px; border-radius:50% 50% 45% 45%; background:#4F9F52; border:2px solid #2F6F36; }
+    .tree::after { content:''; position:absolute; left:9px; top:18px; width:7px; height:12px; border-radius:3px; background:#8B5A2B; }
+    .flower { width:18px; height:18px; border-radius:50%; background:#FFE66D; border:2px solid #5F9E55; box-shadow:8px 1px 0 -4px #FF7A9A,-7px 2px 0 -4px #FF7A9A,1px 8px 0 -4px #FF7A9A; }
+    .cone { width:20px; height:22px; background:linear-gradient(to bottom,#FFB74D 0 25%,#fff 25% 38%,#FF7A5C 38% 100%); clip-path:polygon(50% 0,95% 100%,5% 100%); }
     .player { position: absolute; width: 44px; height: 52px; z-index: 8; pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,.28)); }
     .player svg { width: 100%; height: 100%; display: block; }
 
@@ -206,6 +219,15 @@
     .pd-dot { width:13px; height:13px; border-radius:50%; background:rgba(255,255,255,.15); border:2px solid rgba(255,255,255,.2); transition:background .3s,border-color .3s; }
     .pd-dot.on    { background:#FF6B35; border-color:#FF6B35; }
     .pd-dot.bonus { background:#FFD700; border-color:#FFD700; box-shadow:0 0 6px #FFD700; }
+    .nearby-panel { margin-top:10px; padding:9px; border-radius:16px; background:rgba(255,255,255,.88); box-shadow:0 2px 8px rgba(0,0,0,.12); color:#2F3A3D; }
+    .nearby-title { font-size:12px; font-weight:bold; color:#5F87A1; margin:0 2px 7px; }
+    .nearby-list { display:flex; gap:8px; overflow-x:auto; padding-bottom:2px; -webkit-overflow-scrolling:touch; }
+    .nearby-card { flex:0 0 92px; min-height:82px; border:0; border-radius:12px; background:#F7FBFF; box-shadow:inset 0 0 0 2px rgba(95,135,161,.12); padding:7px 6px; font-family:inherit; color:#2F3A3D; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; }
+    .nearby-card:active { transform:scale(.96); }
+    .nearby-card-icon { width:34px; height:34px; display:block; }
+    .nearby-card-icon svg { width:100%; height:100%; display:block; }
+    .nearby-card-label { font-size:10px; font-weight:bold; line-height:1.15; text-align:center; }
+    .nearby-card-need { font-size:9px; color:#5F87A1; font-weight:bold; }
 
     /* TOWN BUILDING */
     .map-building { position:absolute; width:30px; height:30px; z-index:4; pointer-events:none; filter:drop-shadow(0 2px 4px rgba(0,0,0,.3)); animation:popIn .5s cubic-bezier(.34,1.56,.64,1) both; }
@@ -283,6 +305,10 @@
       </div>
     </div>
     <button class="hero-btn orange" id="hero-btn" onclick="heroAction()"></button>
+    <div class="nearby-panel hidden" id="nearby-panel">
+      <div class="nearby-title">ちかくでおこっていること</div>
+      <div class="nearby-list" id="nearby-list"></div>
+    </div>
   </div>
   <div class="map-scroll" id="map-scroll">
     <div class="map-content" id="map-content"></div>
@@ -2132,11 +2158,13 @@ function buildMap(){
     const yA=BANNER_Y[wi]-8,yB=wi<4?BANNER_Y[wi+1]-8:MAP_H;
     const d=document.createElement('div');d.className='world-bg';d.style.cssText=`top:${yA}px;height:${yB-yA}px;background:${w.bg};`;content.appendChild(d);
   });
+  renderMapScenery(content);
   WORLDS.forEach((w,wi)=>{
     const done=STAGES.filter((_,i)=>Math.floor(i/4)===wi&&i<state.stage).length;
     const b=document.createElement('div');b.className='world-banner';b.style.top=BANNER_Y[wi]+'px';
     b.innerHTML=`${iconSVG(w.emoji,'wb-icon')}<span class="wb-n">${w.name}</span><span class="wb-p">${done}/4</span>`;content.appendChild(b);
   });
+  renderMapPlaces(content);
   STAGES.forEach((s,i)=>{
     const fc=fogClass(i),xp=xpct(i),y=NODE_Y[i];
     const node=document.createElement('div');node.className=`map-node ${fc}`;node.id=`nd-${i}`;
@@ -2198,6 +2226,47 @@ function buildMap(){
     scr.scrollTo({top:Math.max(0,ty-scr.clientHeight/2+N/2),behavior:'smooth'});
   });
   updateTopbar();
+  renderNearbyCards();
+}
+
+function renderMapScenery(content){
+  const river=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  river.setAttribute('class','scenery-svg');river.style.height=MAP_H+'px';
+  river.setAttribute('viewBox',`0 0 100 ${MAP_H}`);river.setAttribute('preserveAspectRatio','none');
+  river.innerHTML=`
+    <path d="M-8 210 C18 240,23 300,5 350 C-12 405,30 430,18 495 C7 558,60 574,48 650 C36 724,-6 752,12 826 C28 894,82 884,92 960 C101 1038,45 1064,58 1140 C70 1215,102 1238,92 1310" fill="none" stroke="rgba(67,176,230,.72)" stroke-width="12" stroke-linecap="round"/>
+    <path d="M-8 210 C18 240,23 300,5 350 C-12 405,30 430,18 495 C7 558,60 574,48 650 C36 724,-6 752,12 826 C28 894,82 884,92 960 C101 1038,45 1064,58 1140 C70 1215,102 1238,92 1310" fill="none" stroke="rgba(255,255,255,.38)" stroke-width="3" stroke-linecap="round" stroke-dasharray="18 18"/>
+  `;
+  content.appendChild(river);
+  const items=[
+    ['tree',8,96],['tree',78,128],['flower',18,178],['tree',84,260],['tree',7,332],['flower',73,392],
+    ['tree',80,520],['cone',73,610],['tree',12,690],['flower',35,735],['tree',86,820],['tree',8,930],
+    ['flower',70,1010],['tree',17,1115],['tree',82,1200],['flower',40,1290],['tree',12,1390],['tree',78,1505],
+    ['flower',18,1600],['tree',86,1700],['tree',9,1810],['flower',68,1905],['tree',80,2010],['tree',15,2110],
+    ['flower',45,2205],['tree',82,2305],['tree',9,2395],['flower',69,2490],['tree',15,2590]
+  ];
+  items.forEach(([cls,x,y])=>{
+    const el=document.createElement('div');el.className=`scenery-item ${cls}`;
+    el.style.left=`${x}%`;el.style.top=`${y}px`;content.appendChild(el);
+  });
+}
+
+function renderMapPlaces(content){
+  const places=[
+    {idx:0,icon:'🏠',title:'住宅地',note:'火事のあとをなおそう',dx:34,dy:-52},
+    {idx:1,icon:'🏢',title:'けいさつエリア',note:'まちをまもる場所',dx:-96,dy:-52},
+    {idx:2,icon:'🏥',title:'びょういん予定地',note:'けが人を助ける場所',dx:34,dy:-52},
+    {idx:4,icon:'🚧',title:'こうじ現場',note:'町をつくる車が活躍',dx:34,dy:-48},
+    {idx:6,icon:'🏗️',title:'建設エリア',note:'建物をたてよう',dx:34,dy:-48}
+  ];
+  places.forEach(p=>{
+    const xp=xpct(p.idx),el=document.createElement('div');
+    el.className='map-place';
+    el.style.left=`calc(${xp*100}% + ${p.dx}px)`;
+    el.style.top=(NODE_Y[p.idx]+p.dy)+'px';
+    el.innerHTML=`<div class="map-place-title">${iconSVG(p.icon,'map-place-icon')}<span>${p.title}</span></div><div class="map-place-note">${p.note}</div>`;
+    content.appendChild(el);
+  });
 }
 
 function renderTownIssues(content){
@@ -2249,6 +2318,32 @@ function townIssueBody(issue,canRepair){
   return'あとでべつのくるまがきたら<br>なにかできるかもしれないよ。';
 }
 
+function issueNeedText(issue){
+  if(issue.type==='burned-house'&&issue.state==='burned')return hasVehicle('excav')?'なおせる！':'しょべるかー';
+  if(issue.type==='police-risk'&&issue.state==='risk')return'ぶるどーざー';
+  if(issue.type==='police-risk'&&issue.state==='lot')return'くれーんしゃ';
+  if(issue.type==='police-station')return'かんせい';
+  if(issue.type==='hospital-needed')return'びょういん';
+  if(issue.type==='transit-needed')return'のりば';
+  return'あとで';
+}
+
+function renderNearbyCards(){
+  const panel=document.getElementById('nearby-panel'),list=document.getElementById('nearby-list');
+  if(!panel||!list)return;
+  const issues=(state.townIssues||[]).map(issue=>({issue,meta:townIssueMeta(issue)})).filter(x=>x.meta);
+  if(!issues.length){panel.classList.add('hidden');list.innerHTML='';return;}
+  panel.classList.remove('hidden');
+  list.innerHTML='';
+  issues.slice(0,6).forEach(({issue,meta})=>{
+    const btn=document.createElement('button');
+    btn.className='nearby-card';
+    btn.innerHTML=`${iconSVG(meta.icon,'nearby-card-icon')}<span class="nearby-card-label">${meta.label}</span><span class="nearby-card-need">${issueNeedText(issue)}</span>`;
+    btn.addEventListener('click',()=>showTownIssuePopup(issue.id));
+    list.appendChild(btn);
+  });
+}
+
 function drawRoads(content,W){
   const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
   svg.setAttribute('class','map-svg');svg.style.height=MAP_H+'px';
@@ -2256,7 +2351,8 @@ function drawRoads(content,W){
   for(let i=0;i<STAGES.length-1;i++){
     const ax=W*xpct(i)+N/2,ay=NODE_Y[i]+N/2;
     const bx=W*xpct(i+1)+N/2,by=NODE_Y[i+1]+N/2;
-    const mx=(ax+bx)/2,d=`M${ax} ${ay} C${mx} ${ay},${mx} ${by},${bx} ${by}`;
+    const sway=(i%4<2?1:-1)*Math.min(42,W*.09);
+    const mx=(ax+bx)/2,d=`M${ax} ${ay} C${mx+sway} ${ay+22},${mx-sway} ${by-22},${bx} ${by}`;
     const done=fogClass(i)==='completed';
     ap(svg,d,'rgba(0,0,0,.28)',58,'');
     ap(svg,d,done?'#4A7A3D':'#8B7355',48,'');
