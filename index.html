@@ -2205,17 +2205,16 @@ function buildMap(){
     }
   });
 
-  // Town buildings (placed on the open sides after a node is cleared)
+  // Town buildings are placed on the opposite side of each vehicle.
   STAGES.forEach((_,i)=>{
     if(!state.buildings||!state.buildings[i])return;
     const xp=xpct(i);
     const bldg=document.createElement('div');
     bldg.className='map-building';
-    // Keep buildings on the open blue/green sides so they do not cover roads or cars.
     if(xp<0.5){
-      bldg.style.left=`calc(${xp*100}% - 44px)`;
+      bldg.style.left=`calc(${xp*100}% + ${N+92}px)`;
     }else{
-      bldg.style.left=`calc(${xp*100}% + ${N-6}px)`;
+      bldg.style.left=`calc(${xp*100}% - 106px)`;
     }
     bldg.style.top=(NODE_Y[i]+N/2-24)+'px';
     bldg.innerHTML=iconSVG(BUILDING_EMOJIS[i]||'🏠','map-building-icon');
@@ -2266,11 +2265,11 @@ function renderMapScenery(content){
 
 function renderMapPlaces(content){
   const places=[
-    {idx:0,icon:'🏠',title:'おうち',note:'あとでなおそう',dx:-50,dy:-58},
-    {idx:1,icon:'🏢',title:'けいさつ',note:'まちをまもる',dx:78,dy:-58},
-    {idx:2,icon:'🏥',title:'びょういん',note:'けがをなおす',dx:-50,dy:-58},
-    {idx:4,icon:'🚧',title:'こうじ',note:'まちをつくる',dx:-50,dy:-54},
-    {idx:6,icon:'🏗️',title:'たてる',note:'くれーんでたてる',dx:-50,dy:-54}
+    {idx:0,icon:'🏠',title:'おうち',note:'あとでなおそう',dx:N+86,dy:-58},
+    {idx:1,icon:'🏢',title:'けいさつ',note:'まちをまもる',dx:-112,dy:-58},
+    {idx:2,icon:'🏥',title:'びょういん',note:'けがをなおす',dx:N+86,dy:-58},
+    {idx:4,icon:'🚧',title:'こうじ',note:'まちをつくる',dx:N+86,dy:-54},
+    {idx:6,icon:'🏗️',title:'たてる',note:'くれーんでたてる',dx:N+86,dy:-54}
   ];
   places.forEach(p=>{
     const xp=xpct(p.idx),el=document.createElement('div');
