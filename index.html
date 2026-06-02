@@ -1972,6 +1972,15 @@ function normalizeState(s){
   if(s.pendingEvent===undefined)s.pendingEvent=-1;
   if(!Array.isArray(s.buildings))s.buildings=[];
   if(!Array.isArray(s.townIssues))s.townIssues=[];
+  const excavIdx=STAGES.findIndex(x=>x.id==='excav');
+  if(excavIdx>=0&&s.stage>excavIdx&&s.pendingEvent!==excavIdx){
+    s.townIssues.forEach(issue=>{
+      if(issue.type==='burned-house'&&issue.state==='burned'&&issue.requiredVehicle==='excav'){
+        issue.state='repaired';
+        s.buildings[issue.stageIdx??0]=true;
+      }
+    });
+  }
   const today=new Date().toDateString();
   if(s.date!==today){s.date=today;s.approvedToday=false;s.tasks=Object.fromEntries(TASKS.map(t=>[t.id,false]));}
   return s;
@@ -2004,6 +2013,38 @@ function addBurnedHouseIssue(stageIdx){
     requiredVehicle:'excav',
     stageIdx
   });
+}
+
+function hasVehicle(id){
+  const idx=STAGES.findIndex(x=>x.id===id);
+  return idx>=0&&state.stage>idx;
+}
+
+function resolveBurnedHouseIssues(){
+  let changed=false;
+  if(!Array.isArray(state.townIssues))state.townIssues=[];
+  if(!Array.isArray(state.buildings))state.buildings=[];
+  state.townIssues.forEach(issue=>{
+    if(issue.type==='burned-house'&&issue.state==='burned'&&issue.requiredVehicle==='excav'){
+      issue.state='repaired';
+      state.buildings[issue.stageIdx??0]=true;
+      changed=true;
+    }
+  });
+  return changed;
+}
+
+function repairTownIssue(issueId){
+  const issue=(state.townIssues||[]).find(x=>x.id===issueId);
+  if(!issue||issue.state!=='burned'||issue.requiredVehicle!=='excav'||!hasVehicle('excav'))return;
+  issue.state='repaired';
+  if(!Array.isArray(state.buildings))state.buildings=[];
+  state.buildings[issue.stageIdx??0]=true;
+  save();
+  document.getElementById('preview-popup').classList.add('hidden');
+  speak('ショベルカーで、こわれたおうちをかたづけたよ。');
+  for(let i=0;i<8;i++)setTimeout(randSpark,i*70);
+  buildMap();
 }
 
 async function copyShareUrl(){
@@ -2119,9 +2160,14 @@ function showTownIssuePopup(issueId){
   const issue=(state.townIssues||[]).find(x=>x.id===issueId);
   if(!issue)return;
   document.getElementById('pp-obstacle').innerHTML=eventSVG('🏚️','popup-svg-wrap');
-  document.getElementById('pp-title').innerHTML='もえたおうちが<br>まだのこっているよ';
-  document.getElementById('pp-body').innerHTML='しょうぼうしゃが火をけしてくれたね！<br>でも、こわれたおうちは<br><strong style="color:#FFE66D">しょべるかー</strong>がきたらかたづけられるよ。';
-  document.getElementById('pp-progress').innerHTML='';
+  const canRepair=issue.state==='burned'&&issue.requiredVehicle==='excav'&&hasVehicle('excav');
+  document.getElementById('pp-title').innerHTML=canRepair?'しょべるかーで<br>かたづけよう！':'もえたおうちが<br>まだのこっているよ';
+  document.getElementById('pp-body').innerHTML=canRepair
+    ?'しょべるかーをゲットしたね！<br>こわれたおうちをかたづけて<br>まちをなおそう。'
+    :'しょうぼうしゃが火をけしてくれたね！<br>でも、こわれたおうちは<br><strong style="color:#FFE66D">しょべるかー</strong>がきたらかたづけられるよ。';
+  document.getElementById('pp-progress').innerHTML=canRepair
+    ?`<button class="btn btn-orange" onclick="repairTownIssue('${issue.id}')">しょべるかーでなおす！</button>`
+    :'';
   document.getElementById('preview-popup').classList.remove('hidden');
 }
 
@@ -2261,7 +2307,11 @@ function playMapEvent(content,W){
   const id=STAGES[fi].id;
   const onDone=()=>{setTimeout(()=>{
     if(id==='fire')addBurnedHouseIssue(fi);
-    else{if(!state.buildings)state.buildings=[];state.buildings[fi]=true;}
+    else{
+      if(!state.buildings)state.buildings=[];
+      state.buildings[fi]=true;
+      if(id==='excav')resolveBurnedHouseIssues();
+    }
     state.pendingEvent=-1;save();buildMap();
   },900);};
   if(id==='fire')   evFire(content,W,fi,ti,ax,ay,fx,fy,onDone);
