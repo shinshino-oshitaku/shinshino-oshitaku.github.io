@@ -1973,6 +1973,7 @@ function normalizeState(s){
   if(s.pendingEvent===undefined)s.pendingEvent=-1;
   if(!Array.isArray(s.buildings))s.buildings=[];
   if(!Array.isArray(s.townIssues))s.townIssues=[];
+  syncStoryIssues(s);
   const excavIdx=STAGES.findIndex(x=>x.id==='excav');
   if(excavIdx>=0&&s.stage>excavIdx&&s.pendingEvent!==excavIdx){
     s.townIssues.forEach(issue=>{
@@ -2005,6 +2006,42 @@ function addTownIssue(issue){
   state.townIssues.push(issue);
 }
 
+function stageIndexById(id){return STAGES.findIndex(x=>x.id===id);}
+
+function issueExists(list,id){return (list||[]).some(x=>x.id===id);}
+
+function syncStoryIssues(s){
+  const issues=Array.isArray(s.townIssues)?s.townIssues:[];
+  const add=(issue)=>{if(!issueExists(issues,issue.id))issues.push(issue);};
+  const policeIdx=stageIndexById('police'), ambuIdx=stageIndexById('ambu'), taxiIdx=stageIndexById('taxi');
+  const bullIdx=stageIndexById('bull'), craneIdx=stageIndexById('crane');
+  if(policeIdx>=0&&s.stage>policeIdx&&!issueExists(issues,'police-station')){
+    add({id:'police-risk',type:'police-risk',state:'risk',createdBy:'police',requiredVehicle:'bull',stageIdx:policeIdx});
+  }
+  if(ambuIdx>=0&&s.stage>ambuIdx)add({id:'hospital-needed',type:'hospital-needed',state:'needed',createdBy:'ambu',requiredVehicle:'crane',stageIdx:ambuIdx});
+  if(taxiIdx>=0&&s.stage>taxiIdx)add({id:'transit-needed',type:'transit-needed',state:'needed',createdBy:'taxi',requiredVehicle:'bus',stageIdx:taxiIdx});
+  const police=issues.find(x=>x.id==='police-risk');
+  if(police&&bullIdx>=0&&s.stage>bullIdx&&s.pendingEvent!==bullIdx)police.state='lot';
+  if(police&&craneIdx>=0&&s.stage>craneIdx&&s.pendingEvent!==craneIdx){
+    police.id='police-station';police.type='police-station';police.state='built';police.requiredVehicle=null;
+    if(!Array.isArray(s.buildings))s.buildings=[];
+    if(policeIdx>=0)s.buildings[policeIdx]=true;
+  }
+  s.townIssues=issues;
+}
+
+function addPoliceRiskIssue(stageIdx){
+  addTownIssue({id:'police-risk',type:'police-risk',state:'risk',createdBy:'police',requiredVehicle:'bull',stageIdx});
+}
+
+function addHospitalNeededIssue(stageIdx){
+  addTownIssue({id:'hospital-needed',type:'hospital-needed',state:'needed',createdBy:'ambu',requiredVehicle:'crane',stageIdx});
+}
+
+function addTransitNeededIssue(stageIdx){
+  addTownIssue({id:'transit-needed',type:'transit-needed',state:'needed',createdBy:'taxi',requiredVehicle:'bus',stageIdx});
+}
+
 function addBurnedHouseIssue(stageIdx){
   addTownIssue({
     id:`burned-house-${stageIdx}`,
@@ -2033,6 +2070,27 @@ function resolveBurnedHouseIssues(){
     }
   });
   return changed;
+}
+
+function advancePoliceStory(vehicleId){
+  if(!Array.isArray(state.townIssues))state.townIssues=[];
+  let issue=state.townIssues.find(x=>x.id==='police-risk'||x.id==='police-station');
+  const policeIdx=stageIndexById('police');
+  if(!issue){
+    issue={id:'police-risk',type:'police-risk',state:'risk',createdBy:'police',requiredVehicle:'bull',stageIdx:policeIdx};
+    state.townIssues.push(issue);
+  }
+  if(vehicleId==='bull'&&issue.state==='risk'){
+    issue.state='lot';issue.requiredVehicle='crane';
+    return true;
+  }
+  if(vehicleId==='crane'&&(issue.state==='risk'||issue.state==='lot')){
+    issue.id='police-station';issue.type='police-station';issue.state='built';issue.requiredVehicle=null;
+    if(!Array.isArray(state.buildings))state.buildings=[];
+    if(policeIdx>=0)state.buildings[policeIdx]=true;
+    return true;
+  }
+  return false;
 }
 
 function repairTownIssue(issueId){
@@ -2144,32 +2202,51 @@ function buildMap(){
 
 function renderTownIssues(content){
   (state.townIssues||[]).forEach(issue=>{
-    if(issue.state!=='burned')return;
+    const meta=townIssueMeta(issue);
+    if(!meta)return;
     const i=issue.stageIdx??0;
     const xp=xpct(i),xSide=xp<0.5?`calc(${xp*100}% + ${N+42}px)`:`calc(${xp*100}% - 42px)`;
     const marker=document.createElement('div');
     marker.className='town-issue';
     marker.style.left=xSide;
-    marker.style.top=(NODE_Y[i]+N/2+12)+'px';
-    marker.innerHTML=`${iconSVG('🏚️','town-issue-icon')}<span class="town-issue-label">あとでなおす</span>`;
+    marker.style.top=(NODE_Y[i]+N/2+12+(meta.dy||0))+'px';
+    marker.innerHTML=`${iconSVG(meta.icon,'town-issue-icon')}<span class="town-issue-label">${meta.label}</span>`;
     marker.addEventListener('click',()=>showTownIssuePopup(issue.id));
     content.appendChild(marker);
   });
 }
 
+function townIssueMeta(issue){
+  if(issue.type==='burned-house'&&issue.state==='burned')return{icon:'🏚️',label:'あとでなおす',title:'もえたおうちが<br>まだのこっているよ'};
+  if(issue.type==='police-risk'&&issue.state==='risk')return{icon:'🦹',label:'またでるかも',title:'どろぼうが<br>またくるかも'};
+  if(issue.type==='police-risk'&&issue.state==='lot')return{icon:'🚧',label:'けいさつしょ予定地',title:'けいさつしょの<br>じゅんびちゅう'};
+  if(issue.type==='police-station'&&issue.state==='built')return{icon:'🏢',label:'けいさつしょ',title:'けいさつしょ<br>かんせい！'};
+  if(issue.type==='hospital-needed')return{icon:'🤕',label:'びょういんがいる',title:'びょういんが<br>まだないよ'};
+  if(issue.type==='transit-needed')return{icon:'🎯',label:'のりばがいる',title:'のりばが<br>まだないよ'};
+  return null;
+}
+
 function showTownIssuePopup(issueId){
   const issue=(state.townIssues||[]).find(x=>x.id===issueId);
   if(!issue)return;
-  document.getElementById('pp-obstacle').innerHTML=eventSVG('🏚️','popup-svg-wrap');
-  const canRepair=issue.state==='burned'&&issue.requiredVehicle==='excav'&&hasVehicle('excav');
-  document.getElementById('pp-title').innerHTML=canRepair?'しょべるかーで<br>かたづけよう！':'もえたおうちが<br>まだのこっているよ';
-  document.getElementById('pp-body').innerHTML=canRepair
-    ?'しょべるかーをゲットしたね！<br>こわれたおうちをかたづけて<br>まちをなおそう。'
-    :'しょうぼうしゃが火をけしてくれたね！<br>でも、こわれたおうちは<br><strong style="color:#FFE66D">しょべるかー</strong>がきたらかたづけられるよ。';
-  document.getElementById('pp-progress').innerHTML=canRepair
-    ?`<button class="btn btn-orange" onclick="repairTownIssue('${issue.id}')">しょべるかーでなおす！</button>`
-    :'';
+  const meta=townIssueMeta(issue)||{icon:'❓',title:'まだなにか<br>ありそう'};
+  document.getElementById('pp-obstacle').innerHTML=eventSVG(meta.icon,'popup-svg-wrap');
+  const canRepair=issue.type==='burned-house'&&issue.state==='burned'&&issue.requiredVehicle==='excav'&&hasVehicle('excav');
+  document.getElementById('pp-title').innerHTML=canRepair?'しょべるかーで<br>かたづけよう！':meta.title;
+  document.getElementById('pp-body').innerHTML=townIssueBody(issue,canRepair);
+  document.getElementById('pp-progress').innerHTML=canRepair?`<button class="btn btn-orange" onclick="repairTownIssue('${issue.id}')">しょべるかーでなおす！</button>`:'';
   document.getElementById('preview-popup').classList.remove('hidden');
+}
+
+function townIssueBody(issue,canRepair){
+  if(canRepair)return'しょべるかーをゲットしたね！<br>こわれたおうちをかたづけて<br>まちをなおそう。';
+  if(issue.type==='burned-house')return'しょうぼうしゃが火をけしてくれたね！<br>でも、こわれたおうちは<br><strong style="color:#FFE66D">しょべるかー</strong>がきたらかたづけられるよ。';
+  if(issue.type==='police-risk'&&issue.state==='risk')return'ぱとかーがどろぼうをおいはらったよ。<br>でも、けいさつしょがないから<br><strong style="color:#FFE66D">ぶるどーざー</strong>がきたら土地をつくろう。';
+  if(issue.type==='police-risk'&&issue.state==='lot')return'けいさつしょの土地ができたよ。<br>つぎは<strong style="color:#FFE66D">くれーんしゃ</strong>で<br>けいさつしょをたてよう。';
+  if(issue.type==='police-station')return'けいさつしょができたよ！<br>これでどろぼうがきても<br>まちをまもれるね。';
+  if(issue.type==='hospital-needed')return'きゅうきゅうしゃが助けてくれたね。<br>でも、まちにはまだ<br><strong style="color:#FFE66D">びょういん</strong>がひつようだよ。';
+  if(issue.type==='transit-needed')return'たくしーが送ってくれたね。<br>でも、みんなが迷わないように<br><strong style="color:#FFE66D">のりば</strong>がほしいね。';
+  return'あとでべつのくるまがきたら<br>なにかできるかもしれないよ。';
 }
 
 function drawRoads(content,W){
@@ -2311,7 +2388,11 @@ function playMapEvent(content,W){
     else{
       if(!state.buildings)state.buildings=[];
       state.buildings[fi]=true;
+      if(id==='police')addPoliceRiskIssue(fi);
+      if(id==='ambu')addHospitalNeededIssue(fi);
+      if(id==='taxi')addTransitNeededIssue(fi);
       if(id==='excav')resolveBurnedHouseIssues();
+      if(id==='bull'||id==='crane')advancePoliceStory(id);
     }
     state.pendingEvent=-1;save();buildMap();
   },900);};
