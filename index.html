@@ -2205,14 +2205,14 @@ function buildMap(){
     }
   });
 
-  // Town buildings live in the background zones, not along the road.
+  // Town buildings live in hand-picked background slots, not beside roads or cars.
   STAGES.forEach((_,i)=>{
     if(!state.buildings||!state.buildings[i])return;
-    const xp=xpct(i);
+    const slot=backgroundSlot(i);
     const bldg=document.createElement('div');
     bldg.className='map-building';
-    bldg.style.left=xp<0.5?'calc(100% - 88px)':'18px';
-    bldg.style.top=(NODE_Y[i]+10)+'px';
+    bldg.style.left=slot.left;
+    bldg.style.top=slot.top+'px';
     bldg.innerHTML=iconSVG(BUILDING_EMOJIS[i]||'🏠','map-building-icon');
     content.appendChild(bldg);
   });
@@ -2261,20 +2261,33 @@ function renderMapScenery(content){
 
 function renderMapPlaces(content){
   const places=[
-    {idx:0,icon:'🏠',title:'おうち',note:'あとでなおそう',dy:12},
-    {idx:1,icon:'🏢',title:'けいさつ',note:'まちをまもる',dy:10},
-    {idx:2,icon:'🏥',title:'びょういん',note:'けがをなおす',dy:10},
-    {idx:4,icon:'🚧',title:'こうじ',note:'まちをつくる',dy:10},
-    {idx:6,icon:'🏗️',title:'たてる',note:'くれーんでたてる',dy:10}
+    {idx:0,icon:'🏠',title:'おうち',note:'あとでなおそう'},
+    {idx:1,icon:'🏢',title:'けいさつ',note:'まちをまもる'},
+    {idx:2,icon:'🏥',title:'びょういん',note:'けがをなおす'},
+    {idx:4,icon:'🚧',title:'こうじ',note:'まちをつくる'},
+    {idx:6,icon:'🏗️',title:'たてる',note:'くれーんでたてる'}
   ];
   places.forEach(p=>{
-    const xp=xpct(p.idx),el=document.createElement('div');
+    const slot=backgroundSlot(p.idx),el=document.createElement('div');
     el.className='map-place';
-    el.style.left=xp<0.5?'calc(100% - 92px)':'16px';
-    el.style.top=(NODE_Y[p.idx]+p.dy)+'px';
+    el.style.left=slot.left;
+    el.style.top=slot.top+'px';
     el.innerHTML=`<div class="map-place-title">${iconSVG(p.icon,'map-place-icon')}<span>${p.title}</span></div><div class="map-place-note">${p.note}</div>`;
     content.appendChild(el);
   });
+}
+
+function backgroundSlot(i){
+  const slots=[
+    {side:'right',dy:82},
+    {side:'left', dy:116},
+    {side:'right',dy:110},
+    {side:'left', dy:96}
+  ];
+  const slot=slots[i%slots.length];
+  const left=slot.side==='right'?'calc(100% - 126px)':'84px';
+  const center=slot.side==='right'?'calc(100% - 91px)':'119px';
+  return{left,center,top:NODE_Y[i]+slot.dy};
 }
 
 function renderTownIssues(content){
@@ -2282,12 +2295,11 @@ function renderTownIssues(content){
     const meta=townIssueMeta(issue);
     if(!meta)return;
     const i=issue.stageIdx??0;
-    const xp=xpct(i);
-    const xSide=xp<0.5?'calc(100% - 56px)':'56px';
+    const slot=backgroundSlot(i);
     const marker=document.createElement('div');
     marker.className='town-issue';
-    marker.style.left=xSide;
-    marker.style.top=(NODE_Y[i]+26+(meta.dy||0))+'px';
+    marker.style.left=slot.center;
+    marker.style.top=(slot.top+12+(meta.dy||0))+'px';
     marker.innerHTML=`${iconSVG(meta.icon,'town-issue-icon')}<span class="town-issue-label">${meta.label}</span>`;
     marker.addEventListener('click',()=>showTownIssuePopup(issue.id));
     content.appendChild(marker);
