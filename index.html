@@ -89,25 +89,32 @@
     .popup-dot.bonus{ background: #FFD700; border-color: #FFD700; }
 
     /* GARAGE */
-    #screen-garage { background: #111827; color: #fff; }
-    .gar-head  { background: rgba(0,0,0,.5); padding: 20px 18px; text-align: center; }
-    .gar-title { font-size: 26px; font-weight: bold; color: #FFE66D; }
-    .gar-sub   { font-size: 15px; color: rgba(255,255,255,.45); margin-top: 5px; }
-    .gar-grid  { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; padding: 16px; flex: 1; overflow-y: auto; align-content: start; }
-    .gar-cell  { aspect-ratio: 1; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,.07); border: 2px solid rgba(255,255,255,.1); }
-    .gar-cell.owned  { aspect-ratio: auto; min-height: 130px; padding: 10px 8px; background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.28); cursor: pointer; }
+    #screen-garage { background: #EAF6FF; color: #263238; }
+    .gar-head  { background: #6FA8C6; padding: 18px 16px 14px; text-align: center; color: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.08); }
+    .gar-title { font-size: 26px; font-weight: bold; color: #fff; }
+    .gar-sub   { font-size: 15px; color: rgba(255,255,255,.78); margin-top: 5px; }
+    .gar-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:12px 16px 4px; background:#D9EFFB; }
+    .gar-actions .btn { margin:0; border-radius:16px; font-size:15px; padding:13px 10px; box-shadow:none; }
+    .gar-actions .btn-ghost { background:#fff; color:#4D7080; }
+    .gar-actions .btn-ghostw { background:#5F87A1; color:#fff; }
+    .gar-grid  { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; padding: 14px 16px 16px; flex: 1; overflow-y: auto; align-content: start; background:#EAF6FF; }
+    .gar-cell  { aspect-ratio: 1; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fff; border: 2px solid rgba(95,135,161,.22); box-shadow: 0 3px 10px rgba(95,135,161,.12); overflow:hidden; }
+    .gar-cell.owned  { aspect-ratio: auto; min-height: 136px; padding: 10px 8px 8px; background: #fff; border-color: rgba(95,135,161,.38); cursor: pointer; }
     .gar-cell.owned:active { opacity: .8; }
-    .gar-cell.locked { filter: grayscale(1); opacity: .2; }
+    .gar-cell.locked { filter: grayscale(1); opacity: .38; }
     .gar-cell .ce { font-size: 28px; }
-    .gar-cell .cn { font-size: 11px; color: rgba(255,255,255,.6); margin-top: 3px; text-align: center; line-height: 1.2; font-weight: bold; }
-    .gar-cell-svg { width: 100%; height: 60px; }
+    .gar-cell .cn { font-size: 11px; color: #52656E; margin-top: 4px; text-align: center; line-height: 1.2; font-weight: bold; }
+    .gar-cell-svg { width: 100%; height: 74px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    .gar-cell-svg svg { width:92%; height:100%; display:block; }
     .gar-cell .bldg { font-size: 22px; margin-top: 2px; }
-    .gar-foot { padding: 16px; }
+    .gar-foot { padding: 16px; background:#EAF6FF; }
     .reset-wrap { position: relative; overflow: hidden; border-radius: 14px; margin-top: 10px; }
     .reset-bar  { position: absolute; bottom: 0; left: 0; height: 3px; width: 0; background: rgba(255,80,80,.7); border-radius: 2px; }
     .reset-bar.go { width: 100%; transition: width 3s linear; }
-    .reset-btn  { width: 100%; background: rgba(255,255,255,.06); color: rgba(255,255,255,.3); border: none; border-radius: 14px; font-family: inherit; font-size: 13px; padding: 14px; cursor: pointer; }
-    .share-note { font-size: 11px; line-height: 1.5; color: rgba(255,255,255,.34); text-align: center; margin-top: 8px; }
+    .reset-btn  { width: 100%; background: rgba(95,135,161,.12); color: rgba(38,50,56,.45); border: none; border-radius: 14px; font-family: inherit; font-size: 13px; padding: 14px; cursor: pointer; }
+    .share-note { grid-column:1/-1; font-size: 11px; line-height: 1.5; color: rgba(38,50,56,.55); text-align: center; margin-top: -2px; }
+    .parent-tools { border-top:1px solid rgba(95,135,161,.22); margin-top:10px; padding-top:14px; }
+    .parent-tools-title { font-size:12px; color:rgba(38,50,56,.45); text-align:center; margin-bottom:8px; }
 
     /* CHECKLIST */
     #screen-checklist { background: #EFF6FF; }
@@ -271,13 +278,15 @@
     <div class="gar-title">🏠 ガレージ</div>
     <div class="gar-sub" id="gar-sub"></div>
   </div>
-  <div class="gar-grid" id="gar-grid"></div>
-  <div class="gar-foot">
+  <div class="gar-actions">
     <button class="btn btn-ghost" onclick="showMap()">もどる</button>
     <button class="btn btn-ghostw" onclick="copyShareUrl()">🔗 記録URLをコピー</button>
     <div class="share-note">別のブラウザで同じ記録を開くときだけ使います</div>
-    <div style="border-top:1px solid rgba(255,255,255,.1);margin-top:16px;padding-top:14px;">
-      <div style="font-size:12px;color:rgba(255,255,255,.3);text-align:center;margin-bottom:8px;">── テスト用 ──</div>
+  </div>
+  <div class="gar-grid" id="gar-grid"></div>
+  <div class="gar-foot">
+    <div class="parent-tools">
+      <div class="parent-tools-title">── テスト用 ──</div>
       <button class="btn" onclick="testNextDay()" style="background:rgba(255,200,0,.15);color:rgba(255,220,80,.8);font-size:15px;padding:13px;margin-bottom:8px;">⏭ きょうをリセット</button>
       <button class="btn" onclick="testSkipCar()" style="background:rgba(0,200,100,.12);color:rgba(80,220,140,.8);font-size:15px;padding:13px;margin-bottom:10px;">⚡ いまのくるまをかんせいにする</button>
     </div>
@@ -513,6 +522,14 @@ const BOY_SVG=`<svg viewBox="0 0 80 96" xmlns="http://www.w3.org/2000/svg" aria-
 <rect x="23" y="66" width="34" height="22" rx="10" fill="#4FC3F7" stroke="#1A1A1A" stroke-width="3"/>
 <path d="M24 73 Q40 82 56 73" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="3" stroke-linecap="round"/>
 </svg>`;
+
+const PERSON_SVGS={
+firefighter:`<svg viewBox="0 0 80 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><ellipse cx="40" cy="91" rx="22" ry="4" fill="rgba(0,0,0,.16)"/><circle cx="40" cy="26" r="17" fill="#F7C58F" stroke="#2F3A3D" stroke-width="4"/><path d="M20 25 Q22 8 40 8 Q58 8 60 25 Z" fill="#E64A3B" stroke="#2F3A3D" stroke-width="4" stroke-linejoin="round"/><rect x="29" y="11" width="22" height="9" rx="4" fill="#FFE66D" stroke="#2F3A3D" stroke-width="3"/><circle cx="34" cy="30" r="3" fill="#2F3A3D"/><circle cx="48" cy="30" r="3" fill="#2F3A3D"/><path d="M34 38 Q40 42 47 38" fill="none" stroke="#7A2E1D" stroke-width="3" stroke-linecap="round"/><rect x="20" y="47" width="40" height="34" rx="12" fill="#E64A3B" stroke="#2F3A3D" stroke-width="4"/><path d="M22 58 H58" stroke="#FFE66D" stroke-width="5" stroke-linecap="round"/><circle cx="40" cy="67" r="7" fill="#FFE66D" stroke="#2F3A3D" stroke-width="3"/></svg>`,
+residentSad:`<svg viewBox="0 0 80 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><ellipse cx="40" cy="91" rx="21" ry="4" fill="rgba(0,0,0,.14)"/><circle cx="40" cy="26" r="18" fill="#F7C58F" stroke="#2F3A3D" stroke-width="4"/><path d="M22 24 Q25 8 41 8 Q57 9 60 25 Q48 18 38 18 Q30 22 22 24Z" fill="#5D4037" stroke="#2F3A3D" stroke-width="4" stroke-linejoin="round"/><circle cx="34" cy="31" r="3" fill="#2F3A3D"/><circle cx="48" cy="31" r="3" fill="#2F3A3D"/><path d="M34 42 Q40 37 47 42" fill="none" stroke="#7A2E1D" stroke-width="3" stroke-linecap="round"/><circle cx="55" cy="37" r="3" fill="#7EC8F5"/><rect x="22" y="49" width="36" height="32" rx="12" fill="#74B86F" stroke="#2F3A3D" stroke-width="4"/><path d="M27 60 Q40 68 53 60" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="4" stroke-linecap="round"/></svg>`,
+hydrant:`<svg viewBox="0 0 80 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><ellipse cx="40" cy="88" rx="22" ry="4" fill="rgba(0,0,0,.14)"/><rect x="27" y="34" width="26" height="42" rx="8" fill="#E64A3B" stroke="#2F3A3D" stroke-width="4"/><path d="M30 34 Q32 22 40 22 Q48 22 50 34Z" fill="#FF7A5C" stroke="#2F3A3D" stroke-width="4"/><rect x="20" y="45" width="40" height="15" rx="7" fill="#E64A3B" stroke="#2F3A3D" stroke-width="4"/><circle cx="21" cy="52" r="7" fill="#FFE66D" stroke="#2F3A3D" stroke-width="4"/><circle cx="59" cy="52" r="7" fill="#FFE66D" stroke="#2F3A3D" stroke-width="4"/><rect x="24" y="75" width="32" height="9" rx="4" fill="#FFE66D" stroke="#2F3A3D" stroke-width="4"/></svg>`
+};
+
+function personSVG(type){return PERSON_SVGS[type]||BOY_SVG;}
 
 const REMINDER_TEXT={
   breakfast:'あさごはん、たべたかな？',
@@ -2224,6 +2241,12 @@ function movePlayer(W,toIdx){
 
 function evFire(c,W,fi,ti,ax,ay,fx,fy,done){
   const h1=ea(c,fx-30,fy-5,44,'🏚️'),h2=ea(c,fx+22,fy+12,38,'🏚️');
+  const helper=ea(c,fx-68,fy+36,46,'','');
+  helper.innerHTML=personSVG('firefighter');
+  const resident=ea(c,fx+72,fy+32,44,'','');
+  resident.innerHTML=personSVG('residentSad');
+  const hydrant=ea(c,fx-62,fy-20,34,'','');
+  hydrant.innerHTML=personSVG('hydrant');
   const fireSpots=[
     [-34,-54,32],[-5,-62,28],[28,-44,30],[-16,-24,25],[36,-10,24]
   ];
@@ -2257,7 +2280,7 @@ function evFire(c,W,fi,ti,ax,ay,fx,fy,done){
     setTimeout(()=>fadeOut(car,300),550);
     setTimeout(()=>movePlayer(W,ti),850);
     setTimeout(()=>{
-      [h1,h2,car,...fires].forEach(e=>{try{e.remove();}catch{}});
+      [h1,h2,helper,resident,hydrant,car,...fires].forEach(e=>{try{e.remove();}catch{}});
       done();
     },1500);
   }
