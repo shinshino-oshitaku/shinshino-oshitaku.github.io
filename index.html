@@ -15,15 +15,19 @@
     #screen-map { background: #87CEEB; }
     .map-topbar { background: rgba(0,0,0,.32); backdrop-filter: blur(8px); padding: 12px 14px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
     .tb-info { flex: 1 1 0; min-width: 0; }
-    .tb-car { font-size: 20px; font-weight: bold; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tb-car { font-size: 20px; font-weight: bold; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display:flex; align-items:center; gap:8px; min-width:0; }
+    .tb-car-icon { width:42px; height:32px; flex:0 0 auto; display:block; }
+    .tb-car-icon svg { width:100%; height:100%; display:block; }
     .tb-pts { font-size: 14px; color: rgba(255,255,255,.65); margin-top: 3px; }
-    .tb-garage { position: relative; width: 52px; height: 46px; background: rgba(255,255,255,.2); color: transparent; border: none; border-radius: 13px; padding: 0; font-size: 0; cursor: pointer; font-family: inherit; white-space: nowrap; flex: 0 0 auto; overflow: hidden; }
-    .tb-garage::before { content: '🏠'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 23px; }
+    .tb-garage { position: relative; width: 58px; height: 50px; background: rgba(255,255,255,.24); border: none; border-radius: 13px; padding: 5px; cursor: pointer; font-family: inherit; flex: 0 0 auto; overflow: hidden; display:flex; align-items:center; justify-content:center; }
+    .tb-garage svg { width:44px; height:40px; display:block; filter:drop-shadow(0 1px 2px rgba(0,0,0,.25)); }
     .map-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
     .map-content { position: relative; width: 100%; }
     .map-svg { position: absolute; top: 0; left: 0; width: 100%; pointer-events: none; }
     .world-bg { position: absolute; left: 0; right: 0; }
     .world-banner { position: absolute; left: 8px; right: 8px; background: rgba(0,0,0,.38); backdrop-filter: blur(4px); border-radius: 14px; padding: 8px 16px; display: flex; align-items: center; gap: 10px; }
+    .wb-icon { width:28px; height:28px; display:block; flex:0 0 auto; }
+    .wb-icon svg { width:100%; height:100%; display:block; }
     .wb-e { font-size: 24px; }
     .wb-n { font-size: 16px; font-weight: bold; color: #fff; }
     .wb-p { font-size: 14px; color: rgba(255,255,255,.55); margin-left: auto; }
@@ -70,6 +74,8 @@
     /* HERO BUTTON */
     .map-hero { background: rgba(0,0,0,.28); backdrop-filter: blur(8px); padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); flex-shrink: 0; }
     .hero-btn { width: 100%; border: none; border-radius: 24px; font-family: inherit; font-weight: bold; cursor: pointer; font-size: 28px; padding: 24px 20px; letter-spacing: .02em; transition: background .3s, transform .08s; }
+    .hero-btn .btn-icon { width:36px; height:36px; display:inline-block; vertical-align:-8px; margin-right:8px; }
+    .hero-btn .btn-icon svg { width:100%; height:100%; display:block; }
     .hero-btn:active  { transform: scale(.97); }
     .hero-btn.orange  { background: #FF6B35; color: #fff; box-shadow: 0 6px 22px rgba(255,107,53,.55); }
     .hero-btn.red     { background: #E53935; color: #fff; box-shadow: 0 6px 22px rgba(229,57,53,.55); animation: heroRedPulse 1s ease-in-out infinite; }
@@ -107,6 +113,8 @@
     .gar-cell-svg { width: 100%; height: 74px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
     .gar-cell-svg svg { width:92%; height:100%; display:block; }
     .gar-cell .bldg { font-size: 22px; margin-top: 2px; }
+    .gar-cell .bldg { width:28px; height:28px; display:block; margin:2px auto 0; }
+    .gar-cell .bldg svg { width:100%; height:100%; display:block; }
     .gar-foot { padding: 16px; background:#EAF6FF; }
     .reset-wrap { position: relative; overflow: hidden; border-radius: 14px; margin-top: 10px; }
     .reset-bar  { position: absolute; bottom: 0; left: 0; height: 3px; width: 0; background: rgba(255,80,80,.7); border-radius: 2px; }
@@ -126,6 +134,8 @@
     .task-item:active { transform: scale(.98); }
     .task-item.done { background: #F0FFF4; border-color: #4CAF50; }
     .t-emoji { font-size: 44px; flex-shrink: 0; }
+    .screen h1 .title-icon { width:34px; height:34px; display:inline-block; vertical-align:-7px; margin-right:8px; }
+    .screen h1 .title-icon svg { width:100%; height:100%; display:block; }
     .t-name  { font-size: 24px; font-weight: bold; color: #333; flex: 1; }
     .t-check { width: 42px; height: 42px; border-radius: 50%; border: 3px solid #DDD; display: flex; align-items: center; justify-content: center; font-size: 24px; transition: all .18s; flex-shrink: 0; }
     .task-item.done .t-check { background: #4CAF50; border-color: #4CAF50; color: #fff; }
@@ -197,10 +207,14 @@
     .pd-dot.bonus { background:#FFD700; border-color:#FFD700; box-shadow:0 0 6px #FFD700; }
 
     /* TOWN BUILDING */
-    .map-building { position:absolute; font-size:26px; z-index:4; pointer-events:none; filter:drop-shadow(0 2px 4px rgba(0,0,0,.3)); animation:popIn .5s cubic-bezier(.34,1.56,.64,1) both; }
+    .map-building { position:absolute; width:30px; height:30px; z-index:4; pointer-events:none; filter:drop-shadow(0 2px 4px rgba(0,0,0,.3)); animation:popIn .5s cubic-bezier(.34,1.56,.64,1) both; }
+    .map-building svg { width:100%; height:100%; display:block; }
+    .inline-svg-icon { width:1.25em; height:1.25em; display:inline-block; vertical-align:-.25em; margin-right:.22em; }
+    .inline-svg-icon svg { width:100%; height:100%; display:block; }
     .town-issue { position:absolute; z-index:11; cursor:pointer; text-align:center; transform:translateX(-50%); animation:popIn .5s cubic-bezier(.34,1.56,.64,1) both; }
     .town-issue:active { transform:translateX(-50%) scale(.92); }
     .town-issue-icon { font-size:38px; line-height:1; display:block; filter:drop-shadow(0 2px 4px rgba(0,0,0,.35)); }
+    .town-issue-icon svg { width:42px; height:42px; display:block; }
     .town-issue-label { font-size:11px; font-weight:bold; color:#fff; text-shadow:0 1px 4px rgba(0,0,0,.7); background:rgba(80,80,80,.62); border-radius:7px; padding:2px 7px; margin-top:2px; display:inline-block; white-space:nowrap; }
 
     /* EVENT SVG */
@@ -255,7 +269,9 @@
       <div class="tb-car" id="tb-car"></div>
       <div class="tb-pts" id="tb-pts"></div>
     </div>
-    <button class="tb-garage" onclick="openGarage()">🏠 ガレージ</button>
+    <button class="tb-garage" onclick="openGarage()" aria-label="ガレージ">
+      <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M10 38 L40 14 L70 38" fill="none" stroke="#2F3A3D" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 36 L40 18 L63 36 V68 H17 Z" fill="#FFE0B2" stroke="#2F3A3D" stroke-width="4" stroke-linejoin="round"/><rect x="29" y="45" width="22" height="23" rx="4" fill="#5F87A1" stroke="#2F3A3D" stroke-width="4"/><rect x="24" y="38" width="12" height="10" rx="2" fill="#A7D7F9" stroke="#2F3A3D" stroke-width="3"/><rect x="44" y="38" width="12" height="10" rx="2" fill="#A7D7F9" stroke="#2F3A3D" stroke-width="3"/><path d="M18 66 H62" stroke="#2F3A3D" stroke-width="4" stroke-linecap="round"/></svg>
+    </button>
   </div>
   <div class="map-hero">
     <div class="parts-preview" id="map-parts-preview">
@@ -265,7 +281,7 @@
         <div class="parts-dots-row" id="parts-dots-row"></div>
       </div>
     </div>
-    <button class="hero-btn orange" id="hero-btn" onclick="heroAction()">🌅 きょうのしたく</button>
+    <button class="hero-btn orange" id="hero-btn" onclick="heroAction()"></button>
   </div>
   <div class="map-scroll" id="map-scroll">
     <div class="map-content" id="map-content"></div>
@@ -275,7 +291,7 @@
 <!-- GARAGE -->
 <div class="screen" id="screen-garage">
   <div class="gar-head">
-    <div class="gar-title">🏠 ガレージ</div>
+    <div class="gar-title"><span class="inline-svg-icon"><svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M10 38 L40 14 L70 38" fill="none" stroke="#2F3A3D" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 36 L40 18 L63 36 V68 H17 Z" fill="#FFE0B2" stroke="#2F3A3D" stroke-width="4" stroke-linejoin="round"/><rect x="29" y="45" width="22" height="23" rx="4" fill="#5F87A1" stroke="#2F3A3D" stroke-width="4"/><rect x="24" y="38" width="12" height="10" rx="2" fill="#A7D7F9" stroke="#2F3A3D" stroke-width="3"/><rect x="44" y="38" width="12" height="10" rx="2" fill="#A7D7F9" stroke="#2F3A3D" stroke-width="3"/></svg></span>ガレージ</div>
     <div class="gar-sub" id="gar-sub"></div>
   </div>
   <div class="gar-actions">
@@ -324,7 +340,7 @@
 <!-- CHECKLIST -->
 <div class="screen" id="screen-checklist">
   <div class="cl-head">
-    <h1>✅ きょうのしたく</h1>
+    <h1><span class="title-icon"><svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="40" cy="40" r="31" fill="#74B86F" stroke="#2F3A3D" stroke-width="4"/><path d="M24 41 L35 52 L58 27" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 24 Q34 13 51 19" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="5" stroke-linecap="round"/></svg></span>きょうのしたく</h1>
     <div class="cl-preview" id="cl-preview"></div>
   </div>
   <div class="bonus-banner hidden" id="bonus-banner">⭐ ぜんぶできたら Special パーツももらえる！</div>
@@ -509,12 +525,29 @@ const EVT_SVGS={
 '😊':`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><circle cx="40" cy="40" r="31" fill="#FFE66D" stroke="#2F3A3D" stroke-width="4"/><circle cx="30" cy="34" r="4" fill="#2F3A3D"/><circle cx="50" cy="34" r="4" fill="#2F3A3D"/><circle cx="24" cy="45" r="6" fill="#F09A9A" opacity=".55"/><circle cx="56" cy="45" r="6" fill="#F09A9A" opacity=".55"/><path d="M27 48 Q40 61 53 48" fill="none" stroke="#7A2E1D" stroke-width="4" stroke-linecap="round"/></svg>`,
 '💨':`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><path d="M14 30 H48 Q61 30 61 20 Q61 12 52 12 Q45 12 43 19" fill="none" stroke="#90A4AE" stroke-width="7" stroke-linecap="round"/><path d="M8 45 H56 Q70 45 70 34 Q70 25 60 25" fill="none" stroke="#B0BEC5" stroke-width="7" stroke-linecap="round"/><path d="M20 60 H45 Q57 60 57 51" fill="none" stroke="#CFD8DC" stroke-width="7" stroke-linecap="round"/></svg>`,
 '💰':`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><ellipse cx="40" cy="70" rx="23" ry="5" fill="rgba(0,0,0,.14)"/><path d="M28 18 Q40 25 52 18 L47 31 H33 Z" fill="#66BB6A" stroke="#2F3A3D" stroke-width="3" stroke-linejoin="round"/><path d="M22 34 Q28 25 40 26 Q52 25 58 34 L64 58 Q61 72 40 72 Q19 72 16 58 Z" fill="#81C784" stroke="#2F3A3D" stroke-width="3" stroke-linejoin="round"/><path d="M32 43 H48 M35 52 H45" stroke="#2E7D32" stroke-width="5" stroke-linecap="round"/><circle cx="40" cy="50" r="15" fill="none" stroke="#2E7D32" stroke-width="3"/></svg>`,
+'👆':`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><path d="M37 66 Q26 60 22 49 L18 38 Q16 32 22 30 Q27 29 30 36 L32 40 V17 Q32 10 39 10 Q46 10 46 17 V38 L50 34 Q54 30 59 33 Q63 36 61 42 L56 57 Q52 72 37 66Z" fill="#F7C58F" stroke="#2F3A3D" stroke-width="3" stroke-linejoin="round"/><path d="M39 18 V45 M30 39 Q34 46 40 48" stroke="#D18A57" stroke-width="2" stroke-linecap="round"/><path d="M25 17 Q16 22 14 32 M54 16 Q63 20 66 29" fill="none" stroke="#FFE66D" stroke-width="5" stroke-linecap="round"/></svg>`,
+'🔒':`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect x="18" y="34" width="44" height="34" rx="8" fill="#FFE66D" stroke="#2F3A3D" stroke-width="4"/><path d="M28 34 V27 Q28 14 40 14 Q52 14 52 27 V34" fill="none" stroke="#2F3A3D" stroke-width="6" stroke-linecap="round"/><circle cx="40" cy="49" r="5" fill="#2F3A3D"/><path d="M40 53 V60" stroke="#2F3A3D" stroke-width="4" stroke-linecap="round"/></svg>`,
 };
 
 function eventSVG(key, cls='event-svg-wrap'){
   const svg=EVT_SVGS[key];
   return svg?`<div class="${cls}">${svg}</div>`:`<span>${key}</span>`;
 }
+function iconSVG(key, cls='inline-svg-icon'){
+  const svg=EVT_SVGS[key]||BUILDING_SVGS[key];
+  return svg?`<span class="${cls}">${svg}</span>`:`<span>${key}</span>`;
+}
+
+const BUILDING_SVGS={
+'🏠':`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><path d="M10 38 L40 14 L70 38" fill="none" stroke="#2F3A3D" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 36 L40 18 L63 36 V68 H17 Z" fill="#FFE0B2" stroke="#2F3A3D" stroke-width="4" stroke-linejoin="round"/><rect x="29" y="45" width="22" height="23" rx="4" fill="#5F87A1" stroke="#2F3A3D" stroke-width="4"/><rect x="24" y="38" width="12" height="10" rx="2" fill="#A7D7F9" stroke="#2F3A3D" stroke-width="3"/><rect x="44" y="38" width="12" height="10" rx="2" fill="#A7D7F9" stroke="#2F3A3D" stroke-width="3"/></svg>`,
+'🏪':`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect x="14" y="28" width="52" height="40" rx="5" fill="#F6DFC0" stroke="#2F3A3D" stroke-width="4"/><path d="M12 26 H68 L62 14 H18 Z" fill="#FF7A5C" stroke="#2F3A3D" stroke-width="4" stroke-linejoin="round"/><path d="M18 26 V36 M30 26 V36 M42 26 V36 M54 26 V36 M66 26 V36" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/><rect x="24" y="45" width="14" height="13" rx="2" fill="#A7D7F9" stroke="#2F3A3D" stroke-width="3"/><rect x="45" y="43" width="12" height="25" rx="3" fill="#74B86F" stroke="#2F3A3D" stroke-width="3"/></svg>`,
+'🏥':`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect x="14" y="24" width="52" height="44" rx="6" fill="#FFFFFF" stroke="#2F3A3D" stroke-width="4"/><path d="M40 12 L66 26 H14 Z" fill="#EAF6FF" stroke="#2F3A3D" stroke-width="4" stroke-linejoin="round"/><rect x="34" y="33" width="12" height="26" rx="2" fill="#E64A3B"/><rect x="27" y="40" width="26" height="12" rx="2" fill="#E64A3B"/><rect x="21" y="55" width="13" height="13" rx="2" fill="#A7D7F9" stroke="#2F3A3D" stroke-width="3"/><rect x="46" y="55" width="13" height="13" rx="2" fill="#A7D7F9" stroke="#2F3A3D" stroke-width="3"/></svg>`,
+'🚉':`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect x="15" y="12" width="50" height="52" rx="10" fill="#EAF6FF" stroke="#2F3A3D" stroke-width="4"/><rect x="22" y="22" width="36" height="17" rx="4" fill="#A7D7F9" stroke="#2F3A3D" stroke-width="3"/><rect x="25" y="47" width="10" height="9" rx="3" fill="#FFE66D" stroke="#2F3A3D" stroke-width="3"/><rect x="45" y="47" width="10" height="9" rx="3" fill="#FFE66D" stroke="#2F3A3D" stroke-width="3"/><path d="M25 70 L35 61 M55 70 L45 61" stroke="#2F3A3D" stroke-width="4" stroke-linecap="round"/></svg>`,
+'🏗️':`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><path d="M18 68 V18 H30 V68" fill="#FFB74D" stroke="#2F3A3D" stroke-width="4" stroke-linejoin="round"/><path d="M24 18 H67" stroke="#2F3A3D" stroke-width="5" stroke-linecap="round"/><path d="M30 22 L62 22 L30 45 L62 45" fill="none" stroke="#FF8F00" stroke-width="5" stroke-linejoin="round"/><path d="M62 22 V38" stroke="#2F3A3D" stroke-width="3"/><rect x="55" y="38" width="14" height="12" rx="2" fill="#FFE66D" stroke="#2F3A3D" stroke-width="3"/></svg>`,
+'🏭':`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="39" width="58" height="29" rx="5" fill="#B0BEC5" stroke="#2F3A3D" stroke-width="4"/><path d="M10 39 L25 28 V39 L41 28 V39 L56 28 V39" fill="#CFD8DC" stroke="#2F3A3D" stroke-width="4" stroke-linejoin="round"/><rect x="54" y="17" width="12" height="22" rx="3" fill="#90A4AE" stroke="#2F3A3D" stroke-width="4"/><rect x="18" y="50" width="10" height="10" rx="2" fill="#A7D7F9"/><rect x="35" y="50" width="10" height="10" rx="2" fill="#A7D7F9"/><path d="M57 12 Q52 7 58 4 Q66 6 63 14" fill="#CFD8DC" opacity=".75"/></svg>`,
+'🏢':`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect x="20" y="12" width="40" height="58" rx="5" fill="#90A4AE" stroke="#2F3A3D" stroke-width="4"/><rect x="27" y="20" width="8" height="7" rx="1" fill="#A7D7F9"/><rect x="45" y="20" width="8" height="7" rx="1" fill="#A7D7F9"/><rect x="27" y="35" width="8" height="7" rx="1" fill="#A7D7F9"/><rect x="45" y="35" width="8" height="7" rx="1" fill="#A7D7F9"/><rect x="34" y="54" width="12" height="16" rx="2" fill="#5F87A1" stroke="#2F3A3D" stroke-width="3"/></svg>`,
+'🚧':`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><path d="M16 64 H64" stroke="#2F3A3D" stroke-width="5" stroke-linecap="round"/><path d="M24 62 L40 16 L56 62 Z" fill="#FFB74D" stroke="#2F3A3D" stroke-width="4" stroke-linejoin="round"/><path d="M31 45 H49 M35 32 H45" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/></svg>`
+};
 
 const BOY_SVG=`<svg viewBox="0 0 80 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
 <ellipse cx="40" cy="91" rx="23" ry="4" fill="rgba(0,0,0,.18)"/>
@@ -1898,6 +1931,12 @@ function getCarSVG(id,dots,animIdx=-1){
   const s=STAGES.find(x=>x.id===id);
   return placeholderSVG(s?s.color:'#888',s?s.name:id,dots,animIdx);
 }
+function carLabelHTML(s){
+  return `<span class="tb-car-icon">${getCarSVG(s.id,ALL_TRUE)}</span><span>${s.name}</span>`;
+}
+function carInlineHTML(s){
+  return `<span class="inline-svg-icon">${getCarSVG(s.id,ALL_TRUE)}</span>${s.name}`;
+}
 
 const ALL_TRUE=[true,true,true,true,true];
 const ALL_FALSE=[false,false,false,false,false];
@@ -1993,7 +2032,7 @@ function buildMap(){
   WORLDS.forEach((w,wi)=>{
     const done=STAGES.filter((_,i)=>Math.floor(i/4)===wi&&i<state.stage).length;
     const b=document.createElement('div');b.className='world-banner';b.style.top=BANNER_Y[wi]+'px';
-    b.innerHTML=`<span class="wb-e">${w.emoji}</span><span class="wb-n">${w.name}</span><span class="wb-p">${done}/4</span>`;content.appendChild(b);
+    b.innerHTML=`${iconSVG(w.emoji,'wb-icon')}<span class="wb-n">${w.name}</span><span class="wb-p">${done}/4</span>`;content.appendChild(b);
   });
   STAGES.forEach((s,i)=>{
     const fc=fogClass(i),xp=xpct(i),y=NODE_Y[i];
@@ -2035,7 +2074,7 @@ function buildMap(){
       bldg.style.left=`calc(${xp*100}% - 34px)`;
     }
     bldg.style.top=(NODE_Y[i]+N/2-16)+'px';
-    bldg.textContent=BUILDING_EMOJIS[i]||'🏠';
+    bldg.innerHTML=iconSVG(BUILDING_EMOJIS[i]||'🏠','map-building-icon');
     content.appendChild(bldg);
   });
 
@@ -2067,7 +2106,7 @@ function renderTownIssues(content){
     marker.className='town-issue';
     marker.style.left=xSide;
     marker.style.top=(NODE_Y[i]+N/2+12)+'px';
-    marker.innerHTML='<span class="town-issue-icon">🏚️</span><span class="town-issue-label">あとでなおす</span>';
+    marker.innerHTML=`${iconSVG('🏚️','town-issue-icon')}<span class="town-issue-label">あとでなおす</span>`;
     marker.addEventListener('click',()=>showTownIssuePopup(issue.id));
     content.appendChild(marker);
   });
@@ -2076,7 +2115,7 @@ function renderTownIssues(content){
 function showTownIssuePopup(issueId){
   const issue=(state.townIssues||[]).find(x=>x.id===issueId);
   if(!issue)return;
-  document.getElementById('pp-obstacle').textContent='🏚️';
+  document.getElementById('pp-obstacle').innerHTML=eventSVG('🏚️','popup-svg-wrap');
   document.getElementById('pp-title').innerHTML='もえたおうちが<br>まだのこっているよ';
   document.getElementById('pp-body').innerHTML='しょうぼうしゃが火をけしてくれたね！<br>でも、こわれたおうちは<br><strong style="color:#FFE66D">しょべるかー</strong>がきたらかたづけられるよ。';
   document.getElementById('pp-progress').innerHTML='';
@@ -2108,20 +2147,20 @@ function ap(svg,d,stroke,width,dash){
 function updateTopbar(){
   const s=STAGES[state.stage];
   if(!s){
-    document.getElementById('tb-car').textContent='🎉 ぜんぶクリア！';
+    document.getElementById('tb-car').innerHTML=`${iconSVG('✅','tb-car-icon')}<span>ぜんぶクリア！</span>`;
     document.getElementById('tb-pts').textContent='20だい ぜんしゅうしゅう！';
-    const btn=document.getElementById('hero-btn');btn.className='hero-btn done';btn.textContent='✅ ぜんぶおわり！';return;
+    const btn=document.getElementById('hero-btn');btn.className='hero-btn done';btn.innerHTML=`${iconSVG('✅','btn-icon')}ぜんぶおわり！`;return;
   }
   const earned=state.earnedParts.filter(v=>v).length;
-  document.getElementById('tb-car').textContent=`${s.emoji} ${s.name}`;
+  document.getElementById('tb-car').innerHTML=carLabelHTML(s);
   document.getElementById('tb-pts').textContent=`${earned}/5 パーツ`;
   const btn=document.getElementById('hero-btn');
   if(state.pendingEvent>=0){
-    btn.className='hero-btn red';btn.textContent='🔥 イベントはっせい！マップをみて！';
+    btn.className='hero-btn red';btn.innerHTML=`${iconSVG('🔥','btn-icon')}イベントはっせい！マップをみて！`;
   }else if(state.approvedToday){
-    btn.className='hero-btn done';btn.textContent='✅ きょうはおわり！';
+    btn.className='hero-btn done';btn.innerHTML=`${iconSVG('✅','btn-icon')}きょうはおわり！`;
   }else{
-    btn.className='hero-btn orange';btn.textContent='🌅 きょうのしたく';
+    btn.className='hero-btn orange';btn.innerHTML=`${iconSVG('✅','btn-icon')}きょうのしたく`;
   }
 
   // Parts preview
@@ -2132,7 +2171,7 @@ function updateTopbar(){
   if(s){
     preview.style.display='flex';
     carSvgEl.innerHTML=getCarSVG(s.id,state.earnedParts);
-    carNameEl.textContent=`${s.emoji} ${s.name}`;
+    carNameEl.textContent=s.name;
     dotsRow.innerHTML='';
     for(let i=0;i<5;i++){
       const d=document.createElement('div');
@@ -2176,7 +2215,7 @@ function addActiveMarker(content,W){
   if(ev.e==='🔥'&&audioReady)startFireSound();
   const m=document.createElement('div');m.className='event-marker';m.id='event-marker';
   m.style.cssText=`left:${fx}px;top:${fy-30}px;`;
-  m.innerHTML=`${eventSVG(ev.e)}<div class="event-hint">👆 タップ！</div>`;
+  m.innerHTML=`${eventSVG(ev.e)}<div class="event-hint">${iconSVG('👆')}タップ！</div>`;
   m.addEventListener('click',()=>playMapEvent(content,W));
   content.appendChild(m);
 }
@@ -2187,7 +2226,7 @@ function addPreviewMarker(content,W,fi){
   const ev=STAGES[fi].ev;
   const m=document.createElement('div');m.className='preview-marker';
   m.style.cssText=`left:${fx}px;top:${fy-26}px;`;
-  m.innerHTML=`${eventSVG(ev.e,'preview-svg-wrap')}<span class="preview-lock">🔒</span><div class="preview-hint">${STAGES[fi].name}でかいけつ</div>`;
+  m.innerHTML=`${eventSVG(ev.e,'preview-svg-wrap')}${iconSVG('🔒','preview-lock')}<div class="preview-hint">${STAGES[fi].name}でかいけつ</div>`;
   m.addEventListener('click',()=>showPreviewPopup(fi));
   content.appendChild(m);
 }
@@ -2363,7 +2402,7 @@ function openGarage(){
     if(owned){
       const hasBldg=state.buildings&&state.buildings[i];
       const bldgEmoji=hasBldg?(BUILDING_EMOJIS[i]||'🏠'):'🚧';
-      cell.innerHTML=`<div class="gar-cell-svg">${getCarSVG(s.id,ALL_TRUE)}</div><span class="cn">${s.name}</span><span class="bldg">${bldgEmoji}</span>`;
+      cell.innerHTML=`<div class="gar-cell-svg">${getCarSVG(s.id,ALL_TRUE)}</div><span class="cn">${s.name}</span><span class="bldg">${iconSVG(bldgEmoji,'bldg-icon')}</span>`;
       cell.addEventListener('click',()=>showCarDetail(i));
     }else{
       cell.innerHTML=`<span class="ce">❓</span><span class="cn">???</span>`;
@@ -2377,9 +2416,9 @@ function showCarDetail(i){
   const s=STAGES[i];
   const hasBldg=state.buildings&&state.buildings[i];
   const bldg=hasBldg?(BUILDING_EMOJIS[i]||'🏠'):'🚧';
-  document.getElementById('cdp-bldg').textContent=bldg;
+  document.getElementById('cdp-bldg').innerHTML=iconSVG(bldg,'popup-svg-wrap');
   document.getElementById('cdp-svg').innerHTML=getCarSVG(s.id,ALL_TRUE);
-  document.getElementById('cdp-title').textContent=`${s.emoji} ${s.name} かんせい！`;
+  document.getElementById('cdp-title').innerHTML=`${carInlineHTML(s)} かんせい！`;
   document.getElementById('cdp-body').textContent=hasBldg?'このくるまが まちにたてものをつくった！':'イベントをクリアすると まちにたてものができるよ！';
   document.getElementById('car-detail-popup').classList.remove('hidden');
 }
@@ -2406,7 +2445,7 @@ function openChecklist(){
   ensureAudio();
   startReminderLoop();
   const s=STAGES[state.stage];
-  document.getElementById('cl-preview').textContent=s?`${s.emoji} ${s.name}をつくろう！`:'';
+  document.getElementById('cl-preview').innerHTML=s?`${carInlineHTML(s)}をつくろう！`:'';
   const list=document.getElementById('task-list');list.innerHTML='';
   TASKS.forEach(t=>{
     const done=state.tasks[t.id];
