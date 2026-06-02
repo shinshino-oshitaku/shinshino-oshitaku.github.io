@@ -665,7 +665,7 @@ function stopReminderLoop(){if(reminderTimer){clearInterval(reminderTimer);remin
 const NODE_Y=(()=>{const ys=[];let y=130;for(let w=0;w<5;w++){for(let c=0;c<4;c++){ys.push(y);y+=128;}y+=52;}return ys;})();
 const BANNER_Y=[0,1,2,3,4].map(w=>NODE_Y[w*4]-58);
 const MAP_H=NODE_Y[19]+N+80;
-function xpct(i){return i%2===0?0.08:0.54;}
+function xpct(i){return i%2===0?0.13:0.64;}
 
 // ── CAR SVG ───────────────────────────────────────────────────
 // dots = boolean[5], animIdx = which part is currently snapping in
