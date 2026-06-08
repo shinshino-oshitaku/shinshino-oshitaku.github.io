@@ -38,6 +38,14 @@
     .map-content.event-active .town-issue,
     .map-content.event-active .player { opacity:.42; }
     .map-content.event-active .event-marker { opacity:1; }
+    .map-content.event-active .map-node,
+    .map-content.event-active .preview-marker,
+    .map-content.event-active .map-place,
+    .map-content.event-active .map-building,
+    .map-content.event-active .town-issue {
+      pointer-events: none;
+      cursor: default;
+    }
     .scenery-svg { position:absolute; inset:0 0 auto 0; width:100%; pointer-events:none; z-index:1; }
     .world-bg { position: absolute; left: 0; right: 0; }
     .world-banner { position: absolute; z-index:8; left: 8px; right: 8px; background: rgba(0,0,0,.38); backdrop-filter: blur(4px); border-radius: 14px; padding: 8px 16px; display: flex; align-items: center; gap: 10px; }
@@ -2343,7 +2351,10 @@ function buildMap(){
       node.innerHTML=_ms;
     }
     if(fc==='completed'){const t=document.createElement('div');t.className='node-trophy';t.textContent='🏆';node.appendChild(t);}
-    if(fc==='completed'||fc==='current')node.addEventListener('click',()=>openGarage());
+    if(fc==='completed'||fc==='current')node.addEventListener('click',()=>{
+      if(state.pendingEvent>=0)return;
+      openGarage();
+    });
     content.appendChild(node);
     if(fc!=='fog-hidden'){
       const lbl=document.createElement('div');lbl.className='node-label';lbl.style.cssText=`left:${xp*100}%;top:${y+N+4}px;width:${N}px;`;
