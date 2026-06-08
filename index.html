@@ -115,6 +115,8 @@
     @keyframes slideInRight { from{opacity:0;transform:translateX(40px)} to{opacity:1;transform:translateX(0)} }
     @keyframes popIn      { 0%{opacity:0;transform:scale(0)} 70%{transform:scale(1.3)} 100%{opacity:1;transform:scale(1)} }
     @keyframes splashOut  { 0%{opacity:1;transform:scale(.4)} 100%{opacity:0;transform:scale(1.8)} }
+    @keyframes puffPop    { 0%{opacity:0;transform:translate(-50%,-50%) scale(.5)} 30%{opacity:1} 100%{opacity:0;transform:translate(-50%,-75%) scale(1.4)} }
+    @keyframes workCarArrive { 0%{opacity:0;transform:translateX(90px) scale(.8)} 20%{opacity:1} 100%{opacity:1;transform:translateX(0) scale(1)} }
 
     /* HERO BUTTON */
     .map-hero { background: rgba(0,0,0,.28); backdrop-filter: blur(8px); padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); flex-shrink: 0; }
@@ -267,9 +269,16 @@
     .inline-svg-icon svg { width:100%; height:100%; display:block; }
     .town-issue { position:absolute; z-index:12; cursor:pointer; text-align:center; transform:translateX(-50%); animation:popIn .5s cubic-bezier(.34,1.56,.64,1) both; }
     .town-issue:active { transform:translateX(-50%) scale(.92); }
+    .town-issue.repair-ready { z-index:82; }
+    .town-issue.repair-ready::before { content:''; position:absolute; left:50%; top:21px; width:72px; height:72px; border:5px solid #FFE66D; border-radius:50%; transform:translate(-50%,-50%); box-shadow:0 0 0 8px rgba(255,230,109,.22),0 0 22px rgba(255,230,109,.8); animation:eventRing 1s ease-in-out infinite; pointer-events:none; }
+    .town-issue.repair-ready::after { content:'なおせる'; position:absolute; left:50%; top:-25px; transform:translateX(-50%); background:#FFE66D; color:#263238; border:3px solid #fff; border-radius:999px; padding:2px 10px; font-size:13px; font-weight:bold; white-space:nowrap; box-shadow:0 2px 7px rgba(0,0,0,.25); pointer-events:none; }
     .town-issue-icon { font-size:38px; line-height:1; display:block; filter:drop-shadow(0 2px 4px rgba(0,0,0,.35)); }
     .town-issue-icon svg { width:42px; height:42px; display:block; }
     .town-issue-label { display:none; }
+    .construction-puff { position:absolute; z-index:88; pointer-events:none; transform:translate(-50%,-50%); }
+    .construction-puff svg { width:54px; height:54px; display:block; filter:drop-shadow(0 3px 6px rgba(0,0,0,.25)); animation:puffPop 1s ease forwards; }
+    .construction-car { position:absolute; z-index:87; width:72px; height:54px; pointer-events:none; filter:drop-shadow(0 4px 8px rgba(0,0,0,.28)); animation:workCarArrive 1.2s ease both; }
+    .construction-car svg { width:100%; height:100%; display:block; }
 
     /* EVENT SVG */
     .event-svg-wrap { width:64px; height:64px; display:block; animation:firePulse .5s ease-in-out infinite; filter:drop-shadow(0 3px 8px rgba(0,0,0,.35)); }
@@ -2010,6 +2019,12 @@ function carInlineHTML(s){
 const ALL_TRUE=[true,true,true,true,true];
 const ALL_FALSE=[false,false,false,false,false];
 
+function dateString(offsetDays=0){
+  const d=new Date();
+  d.setDate(d.getDate()+offsetDays);
+  return d.toDateString();
+}
+
 // ── STATE ─────────────────────────────────────────────────────
 function defState(){
   return{date:'',approvedToday:false,
@@ -2039,18 +2054,10 @@ function normalizeState(s){
   if(!Array.isArray(s.buildings))s.buildings=[];
   if(!Array.isArray(s.townIssues))s.townIssues=[];
   syncStoryIssues(s);
-  const excavIdx=STAGES.findIndex(x=>x.id==='excav');
-  if(excavIdx>=0&&s.stage>excavIdx&&s.pendingEvent!==excavIdx){
-    s.townIssues.forEach(issue=>{
-      if(issue.type==='burned-house'&&issue.state==='burned'&&issue.requiredVehicle==='excav'){
-        issue.state='repaired';
-        s.buildings[issue.stageIdx??0]=true;
-      }
-    });
-  }
-  const today=new Date().toDateString();
+  const today=dateString();
   const isNewDay=s.date!==today;
   if(isNewDay){s.date=today;s.approvedToday=false;s.tasks=Object.fromEntries(TASKS.map(t=>[t.id,false]));}
+  completeDueConstructions(s,today);
   if(isNewDay&&s.pendingEvent<0&&shouldRepeatPoliceEvent(s))s.pendingEvent=stageIndexById('police');
   return s;
 }
@@ -2062,7 +2069,7 @@ function loadState(){
   }catch{return defState();}
 }
 function save(){
-  state.date=new Date().toDateString();
+  state.date=dateString();
   localStorage.setItem('kuruma-v5',JSON.stringify(state));
 }
 let state=loadState();save();
@@ -2077,6 +2084,36 @@ function stageIndexById(id){return STAGES.findIndex(x=>x.id===id);}
 
 function issueExists(list,id){return (list||[]).some(x=>x.id===id);}
 
+function completeDueConstructions(s,today=dateString()){
+  let changed=false;
+  if(!Array.isArray(s.townIssues))s.townIssues=[];
+  if(!Array.isArray(s.buildings))s.buildings=[];
+  s.townIssues.forEach(issue=>{
+    if(issue.state==='constructing'&&issue.completeOn&&new Date(issue.completeOn)<=new Date(today)){
+      if(issue.type==='burned-house'){
+        issue.state='repaired';
+        issue.completedOn=today;
+        s.buildings[issue.stageIdx??0]=true;
+        changed=true;
+      }else if(issue.type==='police-risk'&&issue.buildStep==='lot'){
+        issue.state='lot';
+        issue.requiredVehicle='crane';
+        issue.completedOn=today;
+        changed=true;
+      }else if(issue.type==='police-risk'&&issue.buildStep==='station'){
+        issue.id='police-station';
+        issue.type='police-station';
+        issue.state='built';
+        issue.requiredVehicle=null;
+        issue.completedOn=today;
+        s.buildings[issue.stageIdx??0]=true;
+        changed=true;
+      }
+    }
+  });
+  return changed;
+}
+
 function syncStoryIssues(s){
   const issues=Array.isArray(s.townIssues)?s.townIssues:[];
   const add=(issue)=>{if(!issueExists(issues,issue.id))issues.push(issue);};
@@ -2087,13 +2124,6 @@ function syncStoryIssues(s){
   }
   if(ambuIdx>=0&&s.stage>ambuIdx)add({id:'hospital-needed',type:'hospital-needed',state:'needed',createdBy:'ambu',requiredVehicle:'crane',stageIdx:ambuIdx});
   if(taxiIdx>=0&&s.stage>taxiIdx)add({id:'transit-needed',type:'transit-needed',state:'needed',createdBy:'taxi',requiredVehicle:'bus',stageIdx:taxiIdx});
-  const police=issues.find(x=>x.id==='police-risk');
-  if(police&&bullIdx>=0&&s.stage>bullIdx&&s.pendingEvent!==bullIdx)police.state='lot';
-  if(police&&craneIdx>=0&&s.stage>craneIdx&&s.pendingEvent!==craneIdx){
-    police.id='police-station';police.type='police-station';police.state='built';police.requiredVehicle=null;
-    if(!Array.isArray(s.buildings))s.buildings=[];
-    if(policeIdx>=0)s.buildings[policeIdx]=true;
-  }
   s.townIssues=issues;
 }
 
@@ -2133,51 +2163,80 @@ function shouldRepeatPoliceEvent(s){
 }
 
 function resolveBurnedHouseIssues(){
-  let changed=false;
-  if(!Array.isArray(state.townIssues))state.townIssues=[];
-  if(!Array.isArray(state.buildings))state.buildings=[];
-  state.townIssues.forEach(issue=>{
-    if(issue.type==='burned-house'&&issue.state==='burned'&&issue.requiredVehicle==='excav'){
-      issue.state='repaired';
-      state.buildings[issue.stageIdx??0]=true;
-      changed=true;
-    }
-  });
-  return changed;
+  // Getting the shovel car should unlock repairs, not complete them automatically.
+  return false;
 }
 
 function advancePoliceStory(vehicleId){
-  if(!Array.isArray(state.townIssues))state.townIssues=[];
-  let issue=state.townIssues.find(x=>x.id==='police-risk'||x.id==='police-station');
-  const policeIdx=stageIndexById('police');
-  if(!issue){
-    issue={id:'police-risk',type:'police-risk',state:'risk',createdBy:'police',requiredVehicle:'bull',stageIdx:policeIdx};
-    state.townIssues.push(issue);
-  }
-  if(vehicleId==='bull'&&issue.state==='risk'){
-    issue.state='lot';issue.requiredVehicle='crane';
-    return true;
-  }
-  if(vehicleId==='crane'&&(issue.state==='risk'||issue.state==='lot')){
-    issue.id='police-station';issue.type='police-station';issue.state='built';issue.requiredVehicle=null;
-    if(!Array.isArray(state.buildings))state.buildings=[];
-    if(policeIdx>=0)state.buildings[policeIdx]=true;
-    return true;
-  }
+  // Vehicle events unlock town construction; the town changes only after tapping its marker.
   return false;
 }
 
 function repairTownIssue(issueId){
   const issue=(state.townIssues||[]).find(x=>x.id===issueId);
   if(!issue||issue.state!=='burned'||issue.requiredVehicle!=='excav'||!hasVehicle('excav'))return;
-  issue.state='repaired';
-  if(!Array.isArray(state.buildings))state.buildings=[];
-  state.buildings[issue.stageIdx??0]=true;
+  issue.state='constructing';
+  issue.startedOn=dateString();
+  issue.completeOn=dateString(1);
   save();
   document.getElementById('preview-popup').classList.add('hidden');
-  speak('ショベルカーで、こわれたおうちをかたづけたよ。');
-  for(let i=0;i<8;i++)setTimeout(randSpark,i*70);
+  speak('ショベルカーがきたよ。おうちをなおしているよ。あしたできるよ。');
   buildMap();
+  showConstructionStarted(issue,'excav');
+}
+
+function startPoliceConstruction(issueId){
+  const issue=(state.townIssues||[]).find(x=>x.id===issueId);
+  if(!issue||issue.type!=='police-risk')return;
+  if(issue.state==='risk'&&hasVehicle('bull')){
+    issue.state='constructing';
+    issue.buildStep='lot';
+    issue.startedOn=dateString();
+    issue.completeOn=dateString(1);
+    issue.requiredVehicle='crane';
+    save();
+    document.getElementById('preview-popup').classList.add('hidden');
+    speak('ブルドーザーがきたよ。けいさつしょのばしょをつくっているよ。あしたできるよ。');
+    buildMap();
+    showConstructionStarted(issue,'bull');
+    return;
+  }
+  if(issue.state==='lot'&&hasVehicle('crane')){
+    issue.state='constructing';
+    issue.buildStep='station';
+    issue.startedOn=dateString();
+    issue.completeOn=dateString(1);
+    issue.requiredVehicle=null;
+    save();
+    document.getElementById('preview-popup').classList.add('hidden');
+    speak('クレーン車がきたよ。けいさつしょをたてているよ。あしたできるよ。');
+    buildMap();
+    showConstructionStarted(issue,'crane');
+  }
+}
+
+function showConstructionStarted(issue,vehicleId){
+  const content=document.getElementById('map-content');
+  if(!content)return;
+  const slot=backgroundSlot(issue.stageIdx??0);
+  const car=document.createElement('div');
+  car.className='construction-car';
+  car.style.left=slot.left;
+  car.style.top=(slot.top+42)+'px';
+  car.innerHTML=getCarSVG(vehicleId,ALL_TRUE);
+  content.appendChild(car);
+  for(let i=0;i<5;i++){
+    const puff=document.createElement('div');
+    puff.className='construction-puff';
+    puff.style.left=slot.center;
+    puff.style.top=(slot.top+20+i*4)+'px';
+    puff.style.animationDelay=(i*.12)+'s';
+    puff.innerHTML=iconSVG('💨');
+    content.appendChild(puff);
+    setTimeout(()=>{try{puff.remove();}catch{}},1200+i*120);
+  }
+  for(let i=0;i<8;i++)setTimeout(randSpark,i*70);
+  setTimeout(()=>{try{car.remove();}catch{}},2200);
 }
 
 async function copyShareUrl(){
@@ -2199,6 +2258,7 @@ function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classL
 function fogClass(i){const d=i-state.stage;if(d<0)return'completed';if(d===0)return'current';if(d===1)return'fog-near';if(d===2)return'fog-far';return'fog-hidden';}
 
 function buildMap(){
+  if(completeDueConstructions(state))save();
   if(state.pendingEvent<0)stopFireSound();
   const content=document.getElementById('map-content');
   content.innerHTML='';content.style.height=MAP_H+'px';
@@ -2373,6 +2433,10 @@ function renderTownIssues(content){
     const slot=backgroundSlot(i);
     const marker=document.createElement('div');
     marker.className='town-issue';
+    const readyToBuild=(issue.type==='burned-house'&&issue.state==='burned'&&issue.requiredVehicle==='excav'&&hasVehicle('excav'))||
+      (issue.type==='police-risk'&&issue.state==='risk'&&hasVehicle('bull'))||
+      (issue.type==='police-risk'&&issue.state==='lot'&&hasVehicle('crane'));
+    if(readyToBuild)marker.classList.add('repair-ready');
     marker.style.left=slot.center;
     marker.style.top=(slot.top+12+(meta.dy||0))+'px';
     marker.innerHTML=`${iconSVG(meta.icon,'town-issue-icon')}<span class="town-issue-label">${meta.label}</span>`;
@@ -2383,8 +2447,10 @@ function renderTownIssues(content){
 
 function townIssueMeta(issue){
   if(issue.type==='burned-house'&&issue.state==='burned')return{icon:'🏚️',label:'あとでなおす',title:'もえたおうちが<br>まだのこっているよ'};
+  if(issue.type==='burned-house'&&issue.state==='constructing')return{icon:'🚧',label:'こうじちゅう',title:'おうちを<br>なおしているよ'};
   if(issue.type==='police-risk'&&issue.state==='risk')return{icon:'🦹',label:'またでるかも',title:'どろぼうが<br>またくるかも'};
   if(issue.type==='police-risk'&&issue.state==='lot')return{icon:'🚧',label:'よていち',title:'けいさつしょの<br>じゅんびちゅう'};
+  if(issue.type==='police-risk'&&issue.state==='constructing')return{icon:'🚧',label:'こうじちゅう',title:'けいさつしょを<br>つくっているよ'};
   if(issue.type==='police-station'&&issue.state==='built')return{icon:'🏢',label:'けいさつ',title:'けいさつしょ<br>かんせい！'};
   if(issue.type==='hospital-needed')return{icon:'🤕',label:'びょういんがいる',title:'びょういんが<br>まだないよ'};
   if(issue.type==='transit-needed')return{icon:'🎯',label:'のりばがいる',title:'のりばが<br>まだないよ'};
@@ -2397,17 +2463,24 @@ function showTownIssuePopup(issueId){
   const meta=townIssueMeta(issue)||{icon:'❓',title:'まだなにか<br>ありそう'};
   document.getElementById('pp-obstacle').innerHTML=eventSVG(meta.icon,'popup-svg-wrap');
   const canRepair=issue.type==='burned-house'&&issue.state==='burned'&&issue.requiredVehicle==='excav'&&hasVehicle('excav');
-  document.getElementById('pp-title').innerHTML=canRepair?'しょべるかーで<br>かたづけよう！':meta.title;
+  const canBuildPolice=issue.type==='police-risk'&&((issue.state==='risk'&&hasVehicle('bull'))||(issue.state==='lot'&&hasVehicle('crane')));
+  document.getElementById('pp-title').innerHTML=(canRepair||canBuildPolice)?'こうじを<br>はじめよう！':meta.title;
   document.getElementById('pp-body').innerHTML=townIssueBody(issue,canRepair);
-  document.getElementById('pp-progress').innerHTML=canRepair?`<button class="btn btn-orange" onclick="repairTownIssue('${issue.id}')">しょべるかーでなおす！</button>`:'';
+  document.getElementById('pp-progress').innerHTML=canRepair
+    ?`<button class="btn btn-orange" onclick="repairTownIssue('${issue.id}')">こうじスタート！</button>`
+    :(canBuildPolice?`<button class="btn btn-orange" onclick="startPoliceConstruction('${issue.id}')">こうじスタート！</button>`:'');
   document.getElementById('preview-popup').classList.remove('hidden');
 }
 
 function townIssueBody(issue,canRepair){
-  if(canRepair)return'しょべるかーをゲットしたね！<br>こわれたおうちをかたづけて<br>まちをなおそう。';
+  if(canRepair)return'しょべるかーをゲットしたね！<br>ひかっているおうちをタップして<br>こうじをはじめよう。';
+  if(issue.type==='police-risk'&&issue.state==='risk'&&hasVehicle('bull'))return'ぶるどーざーをゲットしたね！<br>けいさつしょのばしょを<br>つくりはじめよう。';
+  if(issue.type==='police-risk'&&issue.state==='lot'&&hasVehicle('crane'))return'くれーんしゃをゲットしたね！<br>けいさつしょを<br>たてはじめよう。';
+  if(issue.type==='burned-house'&&issue.state==='constructing')return'しょべるかーがこうじしているよ。<br><strong style="color:#FFE66D">あした</strong>になったら<br>おうちができるよ。';
   if(issue.type==='burned-house')return'しょうぼうしゃがひをけしてくれたね！<br>でも、こわれたおうちは<br><strong style="color:#FFE66D">しょべるかー</strong>がきたらかたづけられるよ。';
   if(issue.type==='police-risk'&&issue.state==='risk')return'ぱとかーがどろぼうをおいはらったよ。<br>でも、けいさつしょがないから<br><strong style="color:#FFE66D">ぶるどーざー</strong>がきたらばしょをつくろう。';
   if(issue.type==='police-risk'&&issue.state==='lot')return'けいさつしょのばしょができたよ。<br>つぎは<strong style="color:#FFE66D">くれーんしゃ</strong>で<br>けいさつしょをたてよう。';
+  if(issue.type==='police-risk'&&issue.state==='constructing')return'こうじをしているよ。<br><strong style="color:#FFE66D">あした</strong>になったら<br>つぎにすすむよ。';
   if(issue.type==='police-station')return'けいさつしょができたよ！<br>これでどろぼうがきても<br>まちをまもれるね。';
   if(issue.type==='hospital-needed')return'きゅうきゅうしゃがたすけてくれたね。<br>でも、まちにはまだ<br><strong style="color:#FFE66D">びょういん</strong>がひつようだよ。';
   if(issue.type==='transit-needed')return'たくしーがおくってくれたね。<br>でも、みんながまよわないように<br><strong style="color:#FFE66D">のりば</strong>がほしいね。';
@@ -2415,9 +2488,11 @@ function townIssueBody(issue,canRepair){
 }
 
 function issueNeedText(issue){
-  if(issue.type==='burned-house'&&issue.state==='burned')return hasVehicle('excav')?'なおせる！':'しょべるかー';
-  if(issue.type==='police-risk'&&issue.state==='risk')return'ぶるどーざー';
-  if(issue.type==='police-risk'&&issue.state==='lot')return'くれーんしゃ';
+  if(issue.type==='burned-house'&&issue.state==='burned')return hasVehicle('excav')?'こうじできる！':'しょべるかー';
+  if(issue.type==='burned-house'&&issue.state==='constructing')return'あした';
+  if(issue.type==='police-risk'&&issue.state==='risk')return hasVehicle('bull')?'こうじできる！':'ぶるどーざー';
+  if(issue.type==='police-risk'&&issue.state==='lot')return hasVehicle('crane')?'たてられる！':'くれーんしゃ';
+  if(issue.type==='police-risk'&&issue.state==='constructing')return'あした';
   if(issue.type==='police-station')return'かんせい';
   if(issue.type==='hospital-needed')return'びょういん';
   if(issue.type==='transit-needed')return'のりば';
