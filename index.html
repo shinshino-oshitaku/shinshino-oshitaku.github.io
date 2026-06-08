@@ -28,6 +28,16 @@
     .map-content { position: relative; width: 100%; }
     .hidden { display:none !important; }
     .map-svg { position: absolute; top: 0; left: 0; width: 100%; pointer-events: none; z-index:2; }
+    .map-content.event-active .map-svg,
+    .map-content.event-active .map-node,
+    .map-content.event-active .node-label,
+    .map-content.event-active .node-track,
+    .map-content.event-active .preview-marker,
+    .map-content.event-active .map-place,
+    .map-content.event-active .map-building,
+    .map-content.event-active .town-issue,
+    .map-content.event-active .player { opacity:.42; }
+    .map-content.event-active .event-marker { opacity:1; }
     .scenery-svg { position:absolute; inset:0 0 auto 0; width:100%; pointer-events:none; z-index:1; }
     .world-bg { position: absolute; left: 0; right: 0; }
     .world-banner { position: absolute; z-index:8; left: 8px; right: 8px; background: rgba(0,0,0,.38); backdrop-filter: blur(4px); border-radius: 14px; padding: 8px 16px; display: flex; align-items: center; gap: 10px; }
@@ -67,9 +77,21 @@
     .player svg { width: 100%; height: 100%; display: block; }
 
     /* Event markers */
-    .event-marker  { position: absolute; z-index: 80; cursor: pointer; text-align: center; transform: translateX(-50%); }
+    .event-marker  { position: absolute; z-index: 80; cursor: pointer; text-align: center; transform: translateX(-50%); width:112px; min-height:112px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .event-marker::before { content:''; position:absolute; left:50%; top:50%; width:96px; height:96px; border:6px solid #FFE66D; border-radius:50%; transform:translate(-50%,-50%); box-shadow:0 0 0 8px rgba(255,230,109,.22),0 0 22px rgba(255,230,109,.9); animation:eventRing 1s ease-in-out infinite; pointer-events:none; }
+    .event-marker::after { content:'ここ！'; position:absolute; left:50%; top:-22px; transform:translateX(-50%); background:#FFE66D; color:#283238; border:3px solid #fff; border-radius:999px; padding:3px 12px; font-size:15px; font-weight:bold; box-shadow:0 3px 8px rgba(0,0,0,.22); pointer-events:none; }
+    .event-marker .event-svg-wrap { position:relative; z-index:2; animation:eventFloat .9s ease-in-out infinite; filter:drop-shadow(0 4px 8px rgba(0,0,0,.35)); }
     .event-emoji   { font-size: 58px; display: block; animation: firePulse .5s ease-in-out infinite; line-height: 1; }
-    .event-hint    { font-size: 14px; font-weight: bold; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.7); margin-top: 4px; white-space: nowrap; background: rgba(255,80,0,.7); border-radius: 8px; padding: 2px 8px; display: inline-block; }
+    .event-hint    { position:relative; z-index:2; font-size: 16px; font-weight: bold; color: #283238; text-shadow: none; margin-top: 4px; white-space: nowrap; background: #FFE66D; border: 3px solid #fff; border-radius: 999px; padding: 3px 12px; display: inline-flex; align-items:center; gap:4px; box-shadow:0 3px 8px rgba(0,0,0,.2); }
+    @keyframes eventRing { 0%,100%{transform:translate(-50%,-50%) scale(.92);opacity:.85} 50%{transform:translate(-50%,-50%) scale(1.15);opacity:.35} }
+    @keyframes eventFloat { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-8px) scale(1.08)} }
+    .event-guide-card { display:none; margin-top:12px; background:#FFF7CC; color:#263238; border:4px solid #FFE66D; border-radius:18px; padding:12px 14px; align-items:center; gap:12px; box-shadow:0 4px 14px rgba(0,0,0,.18); }
+    .event-guide-card.show { display:flex; }
+    .event-guide-icon { width:52px; height:52px; flex:0 0 auto; display:flex; align-items:center; justify-content:center; animation:eventFloat .9s ease-in-out infinite; }
+    .event-guide-icon svg { width:100%; height:100%; display:block; }
+    .event-guide-copy { min-width:0; }
+    .event-guide-title { font-size:18px; font-weight:bold; line-height:1.25; }
+    .event-guide-body { font-size:14px; font-weight:bold; color:#5C5142; margin-top:2px; }
     .preview-marker { position: absolute; z-index: 9; cursor: pointer; text-align: center; transform: translateX(-50%); }
     .preview-marker:active { transform: translateX(-50%) scale(.92); }
     .preview-emoji  { font-size: 46px; display: block; filter: grayscale(.2); }
@@ -308,6 +330,13 @@
       </div>
     </div>
     <button class="hero-btn orange" id="hero-btn" onclick="heroAction()"></button>
+    <div class="event-guide-card hidden" id="event-guide-card" onclick="heroAction()">
+      <div class="event-guide-icon" id="event-guide-icon"></div>
+      <div class="event-guide-copy">
+        <div class="event-guide-title" id="event-guide-title"></div>
+        <div class="event-guide-body" id="event-guide-body"></div>
+      </div>
+    </div>
     <div class="nearby-panel hidden" id="nearby-panel">
       <div class="nearby-title">おこっていること</div>
       <div class="nearby-list" id="nearby-list"></div>
@@ -612,7 +641,7 @@ const REMINDER_TEXT={
   bag:'にもつのじゅんびは、おわったかな？'
 };
 
-let audioCtx=null, audioReady=false, fireSoundTimer=null, reminderTimer=null, lastReminderIdx=0;
+let audioCtx=null, audioReady=false, fireSoundTimer=null, reminderTimer=null, eventHintTimer=null, lastReminderIdx=0;
 function ensureAudio(){
   if(audioReady)return;
   audioReady=true;
@@ -689,6 +718,7 @@ function startReminderLoop(){
   },5*60*1000);
 }
 function stopReminderLoop(){if(reminderTimer){clearInterval(reminderTimer);reminderTimer=null;}}
+function stopEventHintTimer(){if(eventHintTimer){clearTimeout(eventHintTimer);eventHintTimer=null;}}
 
 // ── LAYOUT ────────────────────────────────────────────────────
 const NODE_Y=(()=>{const ys=[];let y=130;for(let w=0;w<5;w++){for(let c=0;c<4;c++){ys.push(y);y+=128;}y+=52;}return ys;})();
@@ -2166,6 +2196,7 @@ function buildMap(){
   if(state.pendingEvent<0)stopFireSound();
   const content=document.getElementById('map-content');
   content.innerHTML='';content.style.height=MAP_H+'px';
+  content.classList.toggle('event-active',state.pendingEvent>=0);
   WORLDS.forEach((w,wi)=>{
     const yA=BANNER_Y[wi]-8,yB=wi<4?BANNER_Y[wi+1]-8:MAP_H;
     const d=document.createElement('div');d.className='world-bg';d.style.cssText=`top:${yA}px;height:${yB-yA}px;background:${w.bg};`;content.appendChild(d);
@@ -2403,6 +2434,39 @@ function renderNearbyCards(){
   });
 }
 
+function eventGuideInfo(stageIdx){
+  const s=STAGES[stageIdx];
+  if(!s)return{icon:'👆',title:'ここをタップ！',body:'ひかっているマークをおしてね',voice:'ひかっているマークをタップしてね。'};
+  const map={
+    fire:{title:'ひをけそう！',body:'ひかっている ひ をタップ',voice:'ひかっている、ひをタップしてね。'},
+    police:{title:'どろぼうをさがそう！',body:'ひかっているマークをタップ',voice:'どろぼうのマークをタップしてね。'},
+    ambu:{title:'けがをたすけよう！',body:'ひかっているマークをタップ',voice:'けがをしたひとのマークをタップしてね。'},
+    taxi:{title:'おきゃくさんをのせよう！',body:'ひかっているマークをタップ',voice:'おきゃくさんのマークをタップしてね。'}
+  };
+  const info=map[s.id]||{title:'まちをたすけよう！',body:'ひかっているマークをタップ',voice:'ひかっているマークをタップしてね。'};
+  return{icon:s.ev.e,title:info.title,body:info.body,voice:info.voice};
+}
+
+function updateEventGuide(){
+  const card=document.getElementById('event-guide-card');
+  if(!card)return;
+  stopEventHintTimer();
+  if(state.pendingEvent<0||state.stage>=STAGES.length){
+    card.classList.add('hidden');
+    card.classList.remove('show');
+    return;
+  }
+  const info=eventGuideInfo(state.pendingEvent);
+  document.getElementById('event-guide-icon').innerHTML=eventSVG(info.icon,'event-guide-svg');
+  document.getElementById('event-guide-title').textContent=info.title;
+  document.getElementById('event-guide-body').textContent=info.body;
+  card.classList.remove('hidden');
+  card.classList.add('show');
+  eventHintTimer=setTimeout(()=>{
+    if(state.pendingEvent>=0)speak(info.voice);
+  },5000);
+}
+
 function drawRoads(content,W){
   const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
   svg.setAttribute('class','map-svg');svg.style.height=MAP_H+'px';
@@ -2431,7 +2495,7 @@ function updateTopbar(){
   if(!s){
     document.getElementById('tb-car').innerHTML=`${iconSVG('✅','tb-car-icon')}<span>ぜんぶクリア！</span>`;
     document.getElementById('tb-pts').textContent='20だい ぜんしゅうしゅう！';
-    const btn=document.getElementById('hero-btn');btn.className='hero-btn done';btn.innerHTML=`${iconSVG('✅','btn-icon')}ぜんぶおわり！`;return;
+    const btn=document.getElementById('hero-btn');btn.className='hero-btn done';btn.innerHTML=`${iconSVG('✅','btn-icon')}ぜんぶおわり！`;updateEventGuide();return;
   }
   const earned=state.earnedParts.filter(v=>v).length;
   document.getElementById('tb-car').innerHTML=carLabelHTML(s);
@@ -2444,6 +2508,7 @@ function updateTopbar(){
   }else{
     btn.className='hero-btn orange';btn.innerHTML=`${iconSVG('✅','btn-icon')}きょうのしたく`;
   }
+  updateEventGuide();
 
   // Parts preview
   const preview=document.getElementById('map-parts-preview');
@@ -2531,7 +2596,7 @@ function showPreviewPopup(stageIdx){
 
 // ── EVENT ROUTER ──────────────────────────────────────────────
 function playMapEvent(content,W){
-  ensureAudio();stopFireSound();
+  ensureAudio();stopEventHintTimer();stopFireSound();
   const fi=state.pendingEvent,ti=state.stage;
   const{fx,fy,ax,ay}=midPoint(W,fi,ti);
   const marker=document.getElementById('event-marker');if(marker)marker.style.pointerEvents='none';
