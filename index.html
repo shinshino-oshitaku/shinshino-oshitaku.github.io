@@ -110,6 +110,14 @@
     .drop-zone { position:absolute; z-index:90; border:6px dashed #FF3B30; border-radius:18px; background:rgba(255,59,48,.18); box-shadow:0 0 0 8px rgba(255,59,48,.18),0 0 24px rgba(255,59,48,.75); }
     .drag-piece { touch-action:none; pointer-events:auto !important; cursor:grab; }
     .drag-piece:active { cursor:grabbing; }
+    .gesture-hint { position:absolute; z-index:98; left:0; top:0; width:0; height:0; pointer-events:none; }
+    .gesture-hand { position:absolute; left:0; top:0; width:42px; height:42px; transform:translate(-21px,-21px); filter:drop-shadow(0 3px 5px rgba(0,0,0,.3)); animation:gestureDrag 1.45s ease-in-out infinite; }
+    .gesture-hand svg { width:100%; height:100%; display:block; }
+    .gesture-line { position:absolute; left:0; top:0; height:6px; width:var(--dist,100px); border-radius:999px; background:repeating-linear-gradient(90deg,#FF3B30 0 12px,rgba(255,255,255,.9) 12px 20px); transform-origin:left center; transform:rotate(var(--angle,0deg)); box-shadow:0 0 10px rgba(255,59,48,.55); opacity:.9; }
+    .gesture-label { position:absolute; left:var(--label-x,0px); top:var(--label-y,0px); transform:translate(-50%,-50%); background:#FF3B30; color:#fff; border:4px solid #fff; border-radius:999px; padding:4px 12px; font-size:17px; font-weight:bold; white-space:nowrap; box-shadow:0 4px 12px rgba(0,0,0,.24); }
+    .gesture-trace .gesture-hand { animation:gestureTrace 1.1s ease-in-out infinite; }
+    @keyframes gestureDrag { 0%,15%{transform:translate(-21px,-21px) scale(1)} 65%,82%{transform:translate(calc(var(--dx,80px) - 21px),calc(var(--dy,0px) - 21px)) scale(1.08)} 100%{transform:translate(-21px,-21px) scale(1)} }
+    @keyframes gestureTrace { 0%,100%{transform:translate(-62px,-21px) scale(1)} 50%{transform:translate(20px,-21px) scale(1.08)} }
     .sound-unlock { display:none; width:100%; border:0; border-radius:18px; margin:0 0 10px; padding:12px 14px; background:#FFF7CC; color:#263238; font-family:inherit; font-size:18px; font-weight:bold; box-shadow:0 3px 12px rgba(0,0,0,.16); }
     .sound-unlock.show { display:block; }
     .preview-marker { position: absolute; z-index: 9; cursor: pointer; text-align: center; transform: translateX(-50%); }
@@ -2327,6 +2335,7 @@ function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classL
 function fogClass(i){const d=i-state.stage;if(d<0)return'completed';if(d===0)return'current';if(d===1)return'fog-near';if(d===2)return'fog-far';return'fog-hidden';}
 
 function buildMap(){
+  removeGestureHint();
   if(completeDueConstructions(state))save();
   if(state.pendingEvent<0)stopFireSound();
   const content=document.getElementById('map-content');
@@ -2660,6 +2669,44 @@ function addStepNumber(el,num){
   n.textContent=String(num);
   el.appendChild(n);
   return n;
+}
+
+function removeGestureHint(){
+  document.querySelectorAll('.gesture-hint').forEach(el=>el.remove());
+}
+function gestureHandHTML(){
+  return iconSVG('👆','gesture-hand');
+}
+function showDragGuide(c,fromX,fromY,toX,toY,label='ここまで'){
+  removeGestureHint();
+  const dx=toX-fromX,dy=toY-fromY;
+  const dist=Math.max(24,Math.sqrt(dx*dx+dy*dy));
+  const angle=Math.atan2(dy,dx)*180/Math.PI;
+  const g=document.createElement('div');
+  g.className='gesture-hint';
+  g.style.left=fromX+'px';
+  g.style.top=fromY+'px';
+  g.style.setProperty('--dx',dx+'px');
+  g.style.setProperty('--dy',dy+'px');
+  g.style.setProperty('--dist',dist+'px');
+  g.style.setProperty('--angle',angle+'deg');
+  g.style.setProperty('--label-x',(dx*.55)+'px');
+  g.style.setProperty('--label-y',(dy*.55-34)+'px');
+  g.innerHTML=`<div class="gesture-line"></div>${gestureHandHTML()}<div class="gesture-label">${label}</div>`;
+  c.appendChild(g);
+  return g;
+}
+function showTraceGuide(c,x,y,label='なぞる'){
+  removeGestureHint();
+  const g=document.createElement('div');
+  g.className='gesture-hint gesture-trace';
+  g.style.left=x+'px';
+  g.style.top=y+'px';
+  g.style.setProperty('--label-x','-20px');
+  g.style.setProperty('--label-y','-48px');
+  g.innerHTML=`${gestureHandHTML()}<div class="gesture-label">${label}</div>`;
+  c.appendChild(g);
+  return g;
 }
 
 function drawRoads(content,W){
@@ -3119,6 +3166,7 @@ function evBulldozerTrace(c,W,fi,ti,ax,ay,fx,fy,done){
   let progress=0,finished=false,lastX=null,lastY=null;
   setEventGuide('🪵','ゆびでなぞろう！','あかいわくの中をゴシゴシ','あかいわくのなかを、ゆびでなぞってね。');
   speak('あかいわくのなかを、ゆびでなぞって、たいらにしよう。');
+  showTraceGuide(c,fx,fy-8,'なぞって');
   const addProgress=(amount)=>{
     if(finished)return;
     progress=Math.min(100,progress+amount);
@@ -3128,6 +3176,7 @@ function evBulldozerTrace(c,W,fi,ti,ax,ay,fx,fy,done){
     if(progress>=100)finish();
   };
   zone.addEventListener('pointerdown',e=>{
+    removeGestureHint();
     zone.setPointerCapture?.(e.pointerId);
     lastX=e.clientX;lastY=e.clientY;addProgress(8);soundTask();
   });
@@ -3141,6 +3190,7 @@ function evBulldozerTrace(c,W,fi,ti,ax,ay,fx,fy,done){
   zone.addEventListener('pointerup',end);zone.addEventListener('pointercancel',end);
   function finish(){
     if(finished)return;finished=true;
+    removeGestureHint();
     soundAttach();speak('たいらになったよ。こうじのじゅんびができたね。');
     setEventGuide('✅','たいらになったよ！','こうじのじゅんびができたね','');
     for(let i=0;i<8;i++)setTimeout(randSpark,i*70);
@@ -3174,11 +3224,13 @@ function evCraneDrag(c,W,fi,ti,ax,ay,fx,fy,done){
     return p;
   });
   markStepTarget(pieces[0],pieces,{icon:'🏗️',title:'1 かべをはこぼう',body:'ひかっているパーツをあかいわくまでドラッグ',voice:'ひかっているパーツを、あかいわくまではこんでね。'});
+  showDragGuide(c,specs[0].sx,specs[0].sy,specs[0].tx,specs[0].ty,'はこぶ');
   speak('ひかっているパーツを、あかいわくまではこんでね。');
   function makeDraggablePiece(piece,i){
     let dragging=false,offX=0,offY=0;
     piece.addEventListener('pointerdown',e=>{
       if(finished||i!==step||piece.dataset.done)return;
+      removeGestureHint();
       dragging=true;piece.setPointerCapture?.(e.pointerId);
       const r=piece.getBoundingClientRect();offX=e.clientX-r.left;offY=e.clientY-r.top;
       piece.style.zIndex='95';soundTask();
@@ -3203,6 +3255,7 @@ function evCraneDrag(c,W,fi,ti,ax,ay,fx,fy,done){
           zones[step].style.opacity='1';
           pieces[step].style.opacity='1';pieces[step].style.transform='scale(1.05)';
           markStepTarget(pieces[step],pieces,{icon:'🏗️',title:`${step+1} ${specs[step].label}をはこぼう`,body:'ひかっているパーツをあかいわくまでドラッグ',voice:'つぎのひかっているパーツを、あかいわくまではこんでね。'});
+          showDragGuide(c,specs[step].sx,specs[step].sy,specs[step].tx,specs[step].ty,'はこぶ');
         }else finish();
       }else{
         piece.style.transition='left .2s,top .2s';
@@ -3214,6 +3267,7 @@ function evCraneDrag(c,W,fi,ti,ax,ay,fx,fy,done){
   }
   function finish(){
     if(finished)return;finished=true;
+    removeGestureHint();
     soundComplete();speak('パーツをつけたよ。たてものができてきたね。');
     setEventGuide('✅','くみたてたよ！','たてものができてきたね','');
     for(let i=0;i<10;i++)setTimeout(randSpark,i*70);
@@ -3294,11 +3348,13 @@ function evDragToTarget(c,W,fi,ti,ax,ay,fx,fy,done,cfg){
   });
   let step=0,finished=false;
   markStepTarget(pieces[0],pieces,{icon:cfg.pieces[0][0],title:`1 ${cfg.pieces[0][1]}`,body:'ひかっているものをあかいわくまでドラッグ',voice:'ひかっているものを、あかいわくまではこんでね。'});
+  showDragGuide(c,fx+cfg.pieces[0][2],fy+cfg.pieces[0][3],fx+58,fy-30,'はこぶ');
   speak(`${cfg.title} ひかっているものを、あかいわくまではこんでね。`);
   function makeDragPiece(piece,i,tx,ty){
     let dragging=false,offX=0,offY=0;
     piece.addEventListener('pointerdown',e=>{
       if(finished||i!==step||piece.dataset.done)return;
+      removeGestureHint();
       dragging=true;piece.setPointerCapture?.(e.pointerId);
       const r=piece.getBoundingClientRect();offX=e.clientX-r.left;offY=e.clientY-r.top;
       piece.style.zIndex='96';soundTask();
@@ -3324,6 +3380,7 @@ function evDragToTarget(c,W,fi,ti,ax,ay,fx,fy,done,cfg){
         if(pieces[step]){
           pieces[step].style.opacity='1';pieces[step].style.transform='scale(1.08)';
           markStepTarget(pieces[step],pieces,{icon:cfg.pieces[step][0],title:`${step+1} ${cfg.pieces[step][1]}`,body:'ひかっているものをあかいわくまでドラッグ',voice:'つぎのひかっているものを、あかいわくまではこんでね。'});
+          showDragGuide(c,fx+cfg.pieces[step][2],fy+cfg.pieces[step][3],tx,ty,'はこぶ');
         }else finish();
       }else{
         const [, , ox,oy]=cfg.pieces[i];
@@ -3334,6 +3391,7 @@ function evDragToTarget(c,W,fi,ti,ax,ay,fx,fy,done,cfg){
   }
   function finish(){
     if(finished)return;finished=true;
+    removeGestureHint();
     soundComplete();speak(cfg.done);
     setEventGuide('✅','できたよ！',cfg.done,'');
     for(let i=0;i<9;i++)setTimeout(randSpark,i*70);
@@ -3364,6 +3422,7 @@ function evTraceService(c,W,fi,ti,ax,ay,fx,fy,done,cfg){
   let progress=0,finished=false,lastX=null,lastY=null;
   setEventGuide(cfg.item,cfg.title,cfg.body,cfg.voice);
   speak(cfg.voice);
+  showTraceGuide(c,fx,fy-8,'なぞって');
   const addProgress=(amount)=>{
     if(finished)return;
     progress=Math.min(100,progress+amount);
@@ -3372,7 +3431,7 @@ function evTraceService(c,W,fi,ti,ax,ay,fx,fy,done,cfg){
     if(progress>58&&marks[1])fadeOut(marks[1],220);
     if(progress>=100)finish();
   };
-  zone.addEventListener('pointerdown',e=>{zone.setPointerCapture?.(e.pointerId);lastX=e.clientX;lastY=e.clientY;addProgress(8);soundTask();});
+  zone.addEventListener('pointerdown',e=>{removeGestureHint();zone.setPointerCapture?.(e.pointerId);lastX=e.clientX;lastY=e.clientY;addProgress(8);soundTask();});
   zone.addEventListener('pointermove',e=>{
     if(lastX===null)return;
     const dx=e.clientX-lastX,dy=e.clientY-lastY,dist=Math.sqrt(dx*dx+dy*dy);
@@ -3382,6 +3441,7 @@ function evTraceService(c,W,fi,ti,ax,ay,fx,fy,done,cfg){
   zone.addEventListener('pointerup',end);zone.addEventListener('pointercancel',end);
   function finish(){
     if(finished)return;finished=true;
+    removeGestureHint();
     soundComplete();speak(cfg.done);
     setEventGuide('✅','できたよ！',cfg.done,'');
     for(let i=0;i<9;i++)setTimeout(randSpark,i*70);
