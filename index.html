@@ -79,7 +79,6 @@
     /* Event markers */
     .event-marker  { position: absolute; z-index: 80; cursor: pointer; text-align: center; transform: translateX(-50%); width:112px; min-height:112px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
     .event-marker::before { content:''; position:absolute; left:50%; top:50%; width:96px; height:96px; border:6px solid #FFE66D; border-radius:50%; transform:translate(-50%,-50%); box-shadow:0 0 0 8px rgba(255,230,109,.22),0 0 22px rgba(255,230,109,.9); animation:eventRing 1s ease-in-out infinite; pointer-events:none; }
-    .event-marker::after { content:'ここ！'; position:absolute; left:50%; top:-22px; transform:translateX(-50%); background:#FFE66D; color:#283238; border:3px solid #fff; border-radius:999px; padding:3px 12px; font-size:15px; font-weight:bold; box-shadow:0 3px 8px rgba(0,0,0,.22); pointer-events:none; }
     .event-marker .event-svg-wrap { position:relative; z-index:2; animation:eventFloat .9s ease-in-out infinite; filter:drop-shadow(0 4px 8px rgba(0,0,0,.35)); }
     .event-emoji   { font-size: 58px; display: block; animation: firePulse .5s ease-in-out infinite; line-height: 1; }
     .event-hint    { position:relative; z-index:2; font-size: 16px; font-weight: bold; color: #283238; text-shadow: none; margin-top: 4px; white-space: nowrap; background: #FFE66D; border: 3px solid #fff; border-radius: 999px; padding: 3px 12px; display: inline-flex; align-items:center; gap:4px; box-shadow:0 3px 8px rgba(0,0,0,.2); }
@@ -94,10 +93,11 @@
     .event-guide-body { font-size:14px; font-weight:bold; color:#5C5142; margin-top:2px; }
     .event-step-target { pointer-events:auto !important; cursor:pointer; }
     .event-step-target::before { content:''; position:absolute; left:50%; top:50%; width:calc(100% + 22px); height:calc(100% + 22px); border:5px solid #FFE66D; border-radius:50%; transform:translate(-50%,-50%); box-shadow:0 0 0 7px rgba(255,230,109,.25),0 0 20px rgba(255,230,109,.9); animation:eventRing .9s ease-in-out infinite; pointer-events:none; }
-    .event-step-target::after { content:'ここ'; position:absolute; left:50%; top:-22px; transform:translateX(-50%); background:#FFE66D; color:#263238; border:3px solid #fff; border-radius:999px; padding:1px 10px; font-size:13px; font-weight:bold; line-height:1.3; box-shadow:0 2px 7px rgba(0,0,0,.25); pointer-events:none; }
     .event-step-target .event-anim-svg, .event-step-target svg { position:relative; z-index:2; }
     .event-step-dim { opacity:.28 !important; filter:grayscale(.4); }
     .event-step-num { position:absolute; right:-10px; bottom:-10px; z-index:3; width:24px; height:24px; border-radius:50%; background:#FFE66D; border:3px solid #fff; color:#263238; font-size:14px; font-weight:bold; line-height:18px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 7px rgba(0,0,0,.25); pointer-events:none; }
+    .sound-unlock { display:none; width:100%; border:0; border-radius:18px; margin:0 0 10px; padding:12px 14px; background:#FFF7CC; color:#263238; font-family:inherit; font-size:18px; font-weight:bold; box-shadow:0 3px 12px rgba(0,0,0,.16); }
+    .sound-unlock.show { display:block; }
     .preview-marker { position: absolute; z-index: 9; cursor: pointer; text-align: center; transform: translateX(-50%); }
     .preview-marker:active { transform: translateX(-50%) scale(.92); }
     .preview-emoji  { font-size: 46px; display: block; filter: grayscale(.2); }
@@ -337,6 +337,7 @@
     </button>
   </div>
   <div class="map-hero">
+    <button class="sound-unlock" id="sound-unlock" onclick="unlockSound()">おとをオン</button>
     <div class="parts-preview" id="map-parts-preview">
       <div class="parts-car-svg" id="map-car-svg"></div>
       <div class="parts-info">
@@ -656,15 +657,28 @@ const REMINDER_TEXT={
   bag:'にもつのじゅんびは、おわったかな？'
 };
 
-let audioCtx=null, audioReady=false, fireSoundTimer=null, reminderTimer=null, eventHintTimer=null, lastReminderIdx=0;
-function ensureAudio(){
-  if(audioReady)return;
-  audioReady=true;
+let audioCtx=null, audioReady=false, soundUnlocked=false, fireSoundTimer=null, reminderTimer=null, eventHintTimer=null, lastReminderIdx=0;
+function updateSoundButton(){
+  const btn=document.getElementById('sound-unlock');
+  if(!btn)return;
+  btn.classList.toggle('show',!soundUnlocked);
+}
+async function ensureAudio(){
   try{
     const AC=window.AudioContext||window.webkitAudioContext;
     if(AC&&!audioCtx)audioCtx=new AC();
-    if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
+    if(audioCtx&&audioCtx.state==='suspended')await audioCtx.resume();
+    audioReady=!!audioCtx&&audioCtx.state==='running';
+    soundUnlocked=audioReady||soundUnlocked;
+    updateSoundButton();
   }catch{}
+}
+async function unlockSound(){
+  await ensureAudio();
+  soundPrep();
+  speak('おとがでるよ。');
+  soundUnlocked=true;
+  updateSoundButton();
 }
 function speak(text){
   ensureAudio();
@@ -672,10 +686,13 @@ function speak(text){
     if(!('speechSynthesis' in window))return;
     const u=new SpeechSynthesisUtterance(text);
     u.lang='ja-JP';u.rate=.88;u.pitch=1.22;u.volume=.95;
-    const v=speechSynthesis.getVoices().find(x=>/ja|Japan|日本/i.test(x.lang+x.name));
+    let voices=speechSynthesis.getVoices();
+    const v=voices.find(x=>/ja|Japan|日本/i.test(x.lang+x.name));
     if(v)u.voice=v;
     speechSynthesis.cancel();
     speechSynthesis.speak(u);
+    soundUnlocked=true;updateSoundButton();
+    if(!voices.length)setTimeout(()=>{try{speechSynthesis.getVoices();}catch{}},250);
   }catch{}
 }
 function tone(freq,dur=.18,type='sine',vol=.16,delay=0){
@@ -2610,6 +2627,7 @@ function ap(svg,d,stroke,width,dash){
 }
 
 function updateTopbar(){
+  updateSoundButton();
   const s=STAGES[state.stage];
   if(!s){
     document.getElementById('tb-car').innerHTML=`${iconSVG('✅','tb-car-icon')}<span>ぜんぶクリア！</span>`;
