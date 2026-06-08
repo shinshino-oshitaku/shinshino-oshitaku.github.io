@@ -104,10 +104,10 @@
     .event-step-target .event-anim-svg, .event-step-target svg { position:relative; z-index:2; }
     .event-step-dim { opacity:.28 !important; filter:grayscale(.4); }
     .event-step-num { position:absolute; right:-10px; bottom:-10px; z-index:3; width:24px; height:24px; border-radius:50%; background:#FFE66D; border:3px solid #fff; color:#263238; font-size:14px; font-weight:bold; line-height:18px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 7px rgba(0,0,0,.25); pointer-events:none; }
-    .trace-zone { position:absolute; z-index:91; border:5px dashed #FFE66D; border-radius:28px; background:rgba(255,230,109,.16); box-shadow:0 0 0 8px rgba(255,230,109,.18),0 0 20px rgba(255,230,109,.8); touch-action:none; }
+    .trace-zone { position:absolute; z-index:91; border:6px dashed #FF3B30; border-radius:28px; background:rgba(255,59,48,.16); box-shadow:0 0 0 8px rgba(255,59,48,.18),0 0 24px rgba(255,59,48,.75); touch-action:none; }
     .trace-fill { position:absolute; left:8px; right:8px; bottom:8px; height:12px; border-radius:8px; background:rgba(255,255,255,.55); overflow:hidden; }
     .trace-fill span { display:block; height:100%; width:0%; background:#74B86F; border-radius:8px; transition:width .12s; }
-    .drop-zone { position:absolute; z-index:90; border:5px dashed #FFE66D; border-radius:16px; background:rgba(255,230,109,.14); box-shadow:0 0 0 7px rgba(255,230,109,.18); }
+    .drop-zone { position:absolute; z-index:90; border:6px dashed #FF3B30; border-radius:18px; background:rgba(255,59,48,.18); box-shadow:0 0 0 8px rgba(255,59,48,.18),0 0 24px rgba(255,59,48,.75); }
     .drag-piece { touch-action:none; pointer-events:auto !important; cursor:grab; }
     .drag-piece:active { cursor:grabbing; }
     .sound-unlock { display:none; width:100%; border:0; border-radius:18px; margin:0 0 10px; padding:12px 14px; background:#FFF7CC; color:#263238; font-family:inherit; font-size:18px; font-weight:bold; box-shadow:0 3px 12px rgba(0,0,0,.16); }
@@ -2812,6 +2812,7 @@ function playMapEvent(content,W){
   else if(id==='ambu')   evAmbu(content,W,fi,ti,ax,ay,fx,fy,onDone);
   else if(id==='taxi')   evTaxi(content,W,fi,ti,ax,ay,fx,fy,onDone);
   else if(['excav','bull','crane'].includes(id)) evWorkVehicle(content,W,fi,ti,ax,ay,fx,fy,onDone);
+  else if(['dump','bus','truck','mail','garb','tow','snow','roller'].includes(id)) evServiceVehicle(content,W,fi,ti,ax,ay,fx,fy,onDone);
   else                   evGeneric(content,W,fi,ti,ax,ay,fx,fy,onDone);
 }
 
@@ -3020,7 +3021,8 @@ function evWorkVehicle(c,W,fi,ti,ax,ay,fx,fy,done){
   const config={
     excav:{items:[['🪨',-42,-34],['🪨',2,-50],['🪨',42,-22]],msg:'いしを3つタップして、しょべるかーでかたづけよう。',done:'いしをかたづけたよ。'},
     bull:{items:[['🪵',-48,-22],['🪵',0,-46],['🪵',44,-18]],msg:'きを3つタップして、ブルドーザーでおそう。',done:'みちがひらけたよ。'},
-    crane:{items:[['📦',-52,-30],['📦',-8,-50],['📦',34,-26]],msg:'にもつを3つタップして、クレーンでつもう。',done:'にもつをはこべたよ。'}
+    crane:{items:[['📦',-52,-30],['📦',-8,-50],['📦',34,-26]],msg:'にもつを3つタップして、クレーンでつもう。',done:'にもつをはこべたよ。'},
+    dump:{items:[['🪨',-54,-34],['🪨',-8,-54],['🪨',40,-28]],msg:'いしを3つタップして、だんぷかーにつもう。',done:'いしをはこべたよ。'}
   }[s.id];
   let remaining=config.items.length,finished=false;
   speak(config.msg);
@@ -3069,8 +3071,8 @@ function evBulldozerTrace(c,W,fi,ti,ax,ay,fx,fy,done){
   c.appendChild(zone);
   const fill=zone.querySelector('span');
   let progress=0,finished=false,lastX=null,lastY=null;
-  setEventGuide('🪵','ゆびでなぞろう！','きいろのわくの中をゴシゴシ','きいろのわくのなかを、ゆびでなぞってね。');
-  speak('きいろのわくのなかを、ゆびでなぞって、たいらにしよう。');
+  setEventGuide('🪵','ゆびでなぞろう！','あかいわくの中をゴシゴシ','あかいわくのなかを、ゆびでなぞってね。');
+  speak('あかいわくのなかを、ゆびでなぞって、たいらにしよう。');
   const addProgress=(amount)=>{
     if(finished)return;
     progress=Math.min(100,progress+amount);
@@ -3125,8 +3127,8 @@ function evCraneDrag(c,W,fi,ti,ax,ay,fx,fy,done){
     makeDraggablePiece(p,i);
     return p;
   });
-  markStepTarget(pieces[0],pieces,{icon:'🏗️',title:'1 かべをはこぼう',body:'ひかっているパーツをわくまでドラッグ',voice:'ひかっているパーツを、きいろいわくまではこんでね。'});
-  speak('ひかっているパーツを、きいろいわくまではこんでね。');
+  markStepTarget(pieces[0],pieces,{icon:'🏗️',title:'1 かべをはこぼう',body:'ひかっているパーツをあかいわくまでドラッグ',voice:'ひかっているパーツを、あかいわくまではこんでね。'});
+  speak('ひかっているパーツを、あかいわくまではこんでね。');
   function makeDraggablePiece(piece,i){
     let dragging=false,offX=0,offY=0;
     piece.addEventListener('pointerdown',e=>{
@@ -3154,7 +3156,7 @@ function evCraneDrag(c,W,fi,ti,ax,ay,fx,fy,done){
         if(pieces[step]){
           zones[step].style.opacity='1';
           pieces[step].style.opacity='1';pieces[step].style.transform='scale(1.05)';
-          markStepTarget(pieces[step],pieces,{icon:'🏗️',title:`${step+1} ${specs[step].label}をはこぼう`,body:'ひかっているパーツをわくまでドラッグ',voice:'つぎのひかっているパーツを、きいろいわくまではこんでね。'});
+          markStepTarget(pieces[step],pieces,{icon:'🏗️',title:`${step+1} ${specs[step].label}をはこぼう`,body:'ひかっているパーツをあかいわくまでドラッグ',voice:'つぎのひかっているパーツを、あかいわくまではこんでね。'});
         }else finish();
       }else{
         piece.style.transition='left .2s,top .2s';
@@ -3172,6 +3174,163 @@ function evCraneDrag(c,W,fi,ti,ax,ay,fx,fy,done){
     setTimeout(()=>{fadeOut(car,300);zones.forEach(z=>fadeOut(z,250));pieces.forEach(p=>fadeOut(p,250));},700);
     setTimeout(()=>movePlayer(W,ti),1000);
     setTimeout(()=>{[car,...zones,...pieces].forEach(e=>{try{e.remove();}catch{}});done();},1700);
+  }
+}
+
+function evServiceVehicle(c,W,fi,ti,ax,ay,fx,fy,done){
+  const id=STAGES[fi].id;
+  if(id==='snow')return evTraceService(c,W,fi,ti,ax,ay,fx,fy,done,{
+    item:'❄️',title:'ゆきをかこう！',body:'あかいわくの中をなぞろう',voice:'あかいわくのなかを、ゆびでなぞってね。',done:'ゆきがなくなったよ。'
+  });
+  if(id==='roller')return evTraceService(c,W,fi,ti,ax,ay,fx,fy,done,{
+    item:'🛣️',title:'みちをたいらに！',body:'あかいわくの中をなぞろう',voice:'あかいわくのなかを、ゆびでなぞってね。',done:'みちがたいらになったよ。'
+  });
+  const configs={
+    dump:{
+      target:'🚚',targetLabel:'だんぷかー',title:'いしをつもう！',done:'いしをはこべたよ。',
+      pieces:[['🪨','いし',-72,-42],['🪨','いし',-34,18],['🪨','いし',8,-58]]
+    },
+    bus:{
+      target:'🚏',targetLabel:'ばすてい',title:'ばすにのろう！',done:'みんな、ばすにのれたよ。',
+      pieces:[['🙋','ひと',-74,-46],['🙋','ひと',-40,16],['🙋','ひと',-10,-66]]
+    },
+    truck:{
+      target:'🏬',targetLabel:'おみせ',title:'にもつをはこぼう！',done:'にもつをとどけたよ。',
+      pieces:[['📦','にもつ',-72,-44],['📦','にもつ',-36,20],['📦','にもつ',2,-62]]
+    },
+    mail:{
+      target:'📮',targetLabel:'ぽすと',title:'てがみをとどけよう！',done:'てがみをとどけたよ。',
+      pieces:[['✉️','てがみ',-72,-46],['✉️','てがみ',-38,18],['✉️','てがみ',4,-64]]
+    },
+    garb:{
+      target:'🗑️',targetLabel:'ごみしゅうしゅうしゃ',title:'ごみをあつめよう！',done:'まちがきれいになったよ。',
+      pieces:[['🗑️','ごみ',-72,-42],['🗑️','ごみ',-36,24],['🗑️','ごみ',8,-58]]
+    },
+    tow:{
+      target:'🪝',targetLabel:'れっかー',title:'こわれたくるまをたすけよう！',done:'くるまをたすけたよ。',
+      pieces:[['🚙','こわれたくるま',-76,-28]]
+    }
+  };
+  return evDragToTarget(c,W,fi,ti,ax,ay,fx,fy,done,configs[id]||configs.truck);
+}
+
+function evDragToTarget(c,W,fi,ti,ax,ay,fx,fy,done,cfg){
+  const s=STAGES[fi];
+  const car=eaCar(c,ax,ay,58,s.id,'transition:left .8s ease,top .8s ease');
+  setTimeout(()=>moveEl(car,fx-48,fy+30,58),80);
+  const target=ea(c,fx+58,fy-30,46,cfg.target,'');
+  const zone=document.createElement('div');
+  zone.className='drop-zone';
+  zone.style.left=(fx+18)+'px';
+  zone.style.top=(fy-70)+'px';
+  zone.style.width='82px';
+  zone.style.height='82px';
+  c.appendChild(zone);
+  target.style.zIndex='92';
+  const pieces=cfg.pieces.map(([key,label,ox,oy],i)=>{
+    const p=ea(c,fx+ox,fy+oy,42,key,`opacity:${i?'.42':'1'};transition:opacity .2s,transform .2s,left .2s,top .2s`);
+    p.classList.add('drag-piece');
+    p.dataset.label=label;
+    addStepNumber(p,i+1);
+    makeDragPiece(p,i,fx+58,fy-30);
+    return p;
+  });
+  let step=0,finished=false;
+  markStepTarget(pieces[0],pieces,{icon:cfg.pieces[0][0],title:`1 ${cfg.pieces[0][1]}`,body:'ひかっているものをあかいわくまでドラッグ',voice:'ひかっているものを、あかいわくまではこんでね。'});
+  speak(`${cfg.title} ひかっているものを、あかいわくまではこんでね。`);
+  function makeDragPiece(piece,i,tx,ty){
+    let dragging=false,offX=0,offY=0;
+    piece.addEventListener('pointerdown',e=>{
+      if(finished||i!==step||piece.dataset.done)return;
+      dragging=true;piece.setPointerCapture?.(e.pointerId);
+      const r=piece.getBoundingClientRect();offX=e.clientX-r.left;offY=e.clientY-r.top;
+      piece.style.zIndex='96';soundTask();
+    });
+    piece.addEventListener('pointermove',e=>{
+      if(!dragging)return;
+      const cr=c.getBoundingClientRect();
+      piece.style.left=(e.clientX-cr.left-offX)+'px';
+      piece.style.top=(e.clientY-cr.top-offY)+'px';
+    });
+    const drop=e=>{
+      if(!dragging)return;dragging=false;
+      const cr=c.getBoundingClientRect();
+      const cx=e.clientX-cr.left,cy=e.clientY-cr.top;
+      if(Math.abs(cx-tx)<58&&Math.abs(cy-ty)<58){
+        piece.dataset.done='1';soundAttach();
+        moveEl(piece,tx,ty,42);
+        piece.classList.remove('event-step-target');
+        piece.style.opacity='.25';
+        step++;
+        const pop=ea(c,tx,ty-32,28,'✅','animation:fadeScale .55s ease forwards');
+        setTimeout(()=>pop.remove(),600);
+        if(pieces[step]){
+          pieces[step].style.opacity='1';pieces[step].style.transform='scale(1.08)';
+          markStepTarget(pieces[step],pieces,{icon:cfg.pieces[step][0],title:`${step+1} ${cfg.pieces[step][1]}`,body:'ひかっているものをあかいわくまでドラッグ',voice:'つぎのひかっているものを、あかいわくまではこんでね。'});
+        }else finish();
+      }else{
+        const [, , ox,oy]=cfg.pieces[i];
+        moveEl(piece,fx+ox,fy+oy,42);
+      }
+    };
+    piece.addEventListener('pointerup',drop);piece.addEventListener('pointercancel',drop);
+  }
+  function finish(){
+    if(finished)return;finished=true;
+    soundComplete();speak(cfg.done);
+    setEventGuide('✅','できたよ！',cfg.done,'');
+    for(let i=0;i<9;i++)setTimeout(randSpark,i*70);
+    setTimeout(()=>{fadeOut(car,300);fadeOut(target,300);fadeOut(zone,300);pieces.forEach(p=>fadeOut(p,260));},650);
+    setTimeout(()=>movePlayer(W,ti),950);
+    setTimeout(()=>{[car,target,zone,...pieces].forEach(e=>{try{e.remove();}catch{}});done();},1650);
+  }
+}
+
+function evTraceService(c,W,fi,ti,ax,ay,fx,fy,done,cfg){
+  const s=STAGES[fi];
+  const car=eaCar(c,ax,ay,60,s.id,'transition:left .8s ease,top .8s ease');
+  setTimeout(()=>moveEl(car,fx-58,fy+30,60),80);
+  const marks=[
+    ea(c,fx-42,fy-22,38,cfg.item,'animation:popIn .2s ease both'),
+    ea(c,fx+2,fy-42,38,cfg.item,'animation:popIn .25s ease both'),
+    ea(c,fx+42,fy-12,38,cfg.item,'animation:popIn .3s ease both')
+  ];
+  const zone=document.createElement('div');
+  zone.className='drop-zone trace-zone';
+  zone.style.left=(fx-80)+'px';
+  zone.style.top=(fy-66)+'px';
+  zone.style.width='160px';
+  zone.style.height='106px';
+  zone.innerHTML='<div class="trace-fill"><span></span></div>';
+  c.appendChild(zone);
+  const fill=zone.querySelector('span');
+  let progress=0,finished=false,lastX=null,lastY=null;
+  setEventGuide(cfg.item,cfg.title,cfg.body,cfg.voice);
+  speak(cfg.voice);
+  const addProgress=(amount)=>{
+    if(finished)return;
+    progress=Math.min(100,progress+amount);
+    fill.style.width=progress+'%';
+    if(progress>28&&marks[0])fadeOut(marks[0],220);
+    if(progress>58&&marks[1])fadeOut(marks[1],220);
+    if(progress>=100)finish();
+  };
+  zone.addEventListener('pointerdown',e=>{zone.setPointerCapture?.(e.pointerId);lastX=e.clientX;lastY=e.clientY;addProgress(8);soundTask();});
+  zone.addEventListener('pointermove',e=>{
+    if(lastX===null)return;
+    const dx=e.clientX-lastX,dy=e.clientY-lastY,dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist>3){addProgress(Math.min(10,dist*.22));lastX=e.clientX;lastY=e.clientY;}
+  });
+  const end=()=>{lastX=null;lastY=null;};
+  zone.addEventListener('pointerup',end);zone.addEventListener('pointercancel',end);
+  function finish(){
+    if(finished)return;finished=true;
+    soundComplete();speak(cfg.done);
+    setEventGuide('✅','できたよ！',cfg.done,'');
+    for(let i=0;i<9;i++)setTimeout(randSpark,i*70);
+    setTimeout(()=>{fadeOut(car,300);fadeOut(zone,300);marks.forEach(x=>fadeOut(x,220));},650);
+    setTimeout(()=>movePlayer(W,ti),950);
+    setTimeout(()=>{[car,zone,...marks].forEach(e=>{try{e.remove();}catch{}});done();},1650);
   }
 }
 
