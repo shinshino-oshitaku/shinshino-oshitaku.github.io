@@ -96,6 +96,12 @@
     .event-step-target .event-anim-svg, .event-step-target svg { position:relative; z-index:2; }
     .event-step-dim { opacity:.28 !important; filter:grayscale(.4); }
     .event-step-num { position:absolute; right:-10px; bottom:-10px; z-index:3; width:24px; height:24px; border-radius:50%; background:#FFE66D; border:3px solid #fff; color:#263238; font-size:14px; font-weight:bold; line-height:18px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 7px rgba(0,0,0,.25); pointer-events:none; }
+    .trace-zone { position:absolute; z-index:91; border:5px dashed #FFE66D; border-radius:28px; background:rgba(255,230,109,.16); box-shadow:0 0 0 8px rgba(255,230,109,.18),0 0 20px rgba(255,230,109,.8); touch-action:none; }
+    .trace-fill { position:absolute; left:8px; right:8px; bottom:8px; height:12px; border-radius:8px; background:rgba(255,255,255,.55); overflow:hidden; }
+    .trace-fill span { display:block; height:100%; width:0%; background:#74B86F; border-radius:8px; transition:width .12s; }
+    .drop-zone { position:absolute; z-index:90; border:5px dashed #FFE66D; border-radius:16px; background:rgba(255,230,109,.14); box-shadow:0 0 0 7px rgba(255,230,109,.18); }
+    .drag-piece { touch-action:none; pointer-events:auto !important; cursor:grab; }
+    .drag-piece:active { cursor:grabbing; }
     .sound-unlock { display:none; width:100%; border:0; border-radius:18px; margin:0 0 10px; padding:12px 14px; background:#FFF7CC; color:#263238; font-family:inherit; font-size:18px; font-weight:bold; box-shadow:0 3px 12px rgba(0,0,0,.16); }
     .sound-unlock.show { display:block; }
     .preview-marker { position: absolute; z-index: 9; cursor: pointer; text-align: center; transform: translateX(-50%); }
@@ -2997,6 +3003,8 @@ function evTaxi(c,W,fi,ti,ax,ay,fx,fy,done){
 
 function evWorkVehicle(c,W,fi,ti,ax,ay,fx,fy,done){
   const s=STAGES[fi];
+  if(s.id==='bull')return evBulldozerTrace(c,W,fi,ti,ax,ay,fx,fy,done);
+  if(s.id==='crane')return evCraneDrag(c,W,fi,ti,ax,ay,fx,fy,done);
   const car=eaCar(c,ax,ay,56,s.id,'transition:left .8s ease,top .8s ease');
   const config={
     excav:{items:[['🪨',-42,-34],['🪨',2,-50],['🪨',42,-22]],msg:'いしを3つタップして、しょべるかーでかたづけよう。',done:'いしをかたづけたよ。'},
@@ -3029,6 +3037,130 @@ function evWorkVehicle(c,W,fi,ti,ax,ay,fx,fy,done){
     setTimeout(()=>fadeOut(car,300),500);
     setTimeout(()=>movePlayer(W,ti),800);
     setTimeout(()=>{[car,...items].forEach(e=>{try{e.remove();}catch{}});done();},1450);
+  }
+}
+
+function evBulldozerTrace(c,W,fi,ti,ax,ay,fx,fy,done){
+  const car=eaCar(c,ax,ay,62,'bull','transition:left .8s ease,top .8s ease');
+  setTimeout(()=>moveEl(car,fx-58,fy+28,62),100);
+  const dirt=[
+    ea(c,fx-42,fy-22,44,'🪵','animation:popIn .2s ease both'),
+    ea(c,fx+4,fy-38,44,'🪵','animation:popIn .25s ease both'),
+    ea(c,fx+42,fy-16,44,'🪵','animation:popIn .3s ease both')
+  ];
+  const zone=document.createElement('div');
+  zone.className='trace-zone';
+  zone.style.left=(fx-78)+'px';
+  zone.style.top=(fy-64)+'px';
+  zone.style.width='156px';
+  zone.style.height='104px';
+  zone.innerHTML='<div class="trace-fill"><span></span></div>';
+  c.appendChild(zone);
+  const fill=zone.querySelector('span');
+  let progress=0,finished=false,lastX=null,lastY=null;
+  setEventGuide('🪵','ゆびでなぞろう！','きいろのわくの中をゴシゴシ','きいろのわくのなかを、ゆびでなぞってね。');
+  speak('きいろのわくのなかを、ゆびでなぞって、たいらにしよう。');
+  const addProgress=(amount)=>{
+    if(finished)return;
+    progress=Math.min(100,progress+amount);
+    fill.style.width=progress+'%';
+    if(progress>28&&dirt[0])fadeOut(dirt[0],220);
+    if(progress>58&&dirt[1])fadeOut(dirt[1],220);
+    if(progress>=100)finish();
+  };
+  zone.addEventListener('pointerdown',e=>{
+    zone.setPointerCapture?.(e.pointerId);
+    lastX=e.clientX;lastY=e.clientY;addProgress(8);soundTask();
+  });
+  zone.addEventListener('pointermove',e=>{
+    if(lastX===null)return;
+    const dx=e.clientX-lastX,dy=e.clientY-lastY;
+    const dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist>3){addProgress(Math.min(10,dist*.22));lastX=e.clientX;lastY=e.clientY;}
+  });
+  const end=()=>{lastX=null;lastY=null;};
+  zone.addEventListener('pointerup',end);zone.addEventListener('pointercancel',end);
+  function finish(){
+    if(finished)return;finished=true;
+    soundAttach();speak('たいらになったよ。こうじのじゅんびができたね。');
+    setEventGuide('✅','たいらになったよ！','こうじのじゅんびができたね','');
+    for(let i=0;i<8;i++)setTimeout(randSpark,i*70);
+    setTimeout(()=>{fadeOut(car,300);fadeOut(zone,300);dirt.forEach(x=>fadeOut(x,200));},650);
+    setTimeout(()=>movePlayer(W,ti),950);
+    setTimeout(()=>{[car,zone,...dirt].forEach(e=>{try{e.remove();}catch{}});done();},1650);
+  }
+}
+
+function evCraneDrag(c,W,fi,ti,ax,ay,fx,fy,done){
+  const car=eaCar(c,ax,ay,62,'crane','transition:left .8s ease,top .8s ease');
+  setTimeout(()=>moveEl(car,fx-64,fy+34,62),100);
+  const specs=[
+    {key:'📦',label:'かべ',sx:fx-72,sy:fy-52,tx:fx+28,ty:fy-20},
+    {key:'🏠',label:'やね',sx:fx-10,sy:fy-70,tx:fx+28,ty:fy-52},
+    {key:'⭐',label:'かんばん',sx:fx+58,sy:fy-48,tx:fx+28,ty:fy+12}
+  ];
+  let step=0,finished=false;
+  const zones=specs.map((s,i)=>{
+    const z=document.createElement('div');
+    z.className='drop-zone';
+    z.style.left=(s.tx-25)+'px';z.style.top=(s.ty-25)+'px';z.style.width='50px';z.style.height='50px';
+    z.style.opacity=i===0?'1':'.35';
+    c.appendChild(z);return z;
+  });
+  const pieces=specs.map((s,i)=>{
+    const p=ea(c,s.sx,s.sy,42,s.key,`opacity:${i?'.45':'1'};transition:opacity .2s,transform .2s`);
+    p.classList.add('drag-piece');
+    addStepNumber(p,i+1);
+    makeDraggablePiece(p,i);
+    return p;
+  });
+  markStepTarget(pieces[0],pieces,{icon:'🏗️',title:'1 かべをはこぼう',body:'ひかっているパーツをわくまでドラッグ',voice:'ひかっているパーツを、きいろいわくまではこんでね。'});
+  speak('ひかっているパーツを、きいろいわくまではこんでね。');
+  function makeDraggablePiece(piece,i){
+    let dragging=false,offX=0,offY=0;
+    piece.addEventListener('pointerdown',e=>{
+      if(finished||i!==step||piece.dataset.done)return;
+      dragging=true;piece.setPointerCapture?.(e.pointerId);
+      const r=piece.getBoundingClientRect();offX=e.clientX-r.left;offY=e.clientY-r.top;
+      piece.style.zIndex='95';soundTask();
+    });
+    piece.addEventListener('pointermove',e=>{
+      if(!dragging)return;
+      const cr=c.getBoundingClientRect();
+      piece.style.left=(e.clientX-cr.left-offX)+'px';
+      piece.style.top=(e.clientY-cr.top-offY)+'px';
+    });
+    const drop=e=>{
+      if(!dragging)return;dragging=false;
+      const cr=c.getBoundingClientRect();
+      const cx=e.clientX-cr.left,cy=e.clientY-cr.top;
+      const s=specs[i];
+      if(Math.abs(cx-s.tx)<48&&Math.abs(cy-s.ty)<48){
+        piece.dataset.done='1';soundAttach();
+        moveEl(piece,s.tx,s.ty,42);piece.classList.remove('event-step-target');
+        zones[i].style.opacity='.18';
+        step++;
+        if(pieces[step]){
+          zones[step].style.opacity='1';
+          pieces[step].style.opacity='1';pieces[step].style.transform='scale(1.05)';
+          markStepTarget(pieces[step],pieces,{icon:'🏗️',title:`${step+1} ${specs[step].label}をはこぼう`,body:'ひかっているパーツをわくまでドラッグ',voice:'つぎのひかっているパーツを、きいろいわくまではこんでね。'});
+        }else finish();
+      }else{
+        piece.style.transition='left .2s,top .2s';
+        moveEl(piece,s.sx,s.sy,42);
+        setTimeout(()=>piece.style.transition='opacity .2s,transform .2s',220);
+      }
+    };
+    piece.addEventListener('pointerup',drop);piece.addEventListener('pointercancel',drop);
+  }
+  function finish(){
+    if(finished)return;finished=true;
+    soundComplete();speak('パーツをつけたよ。たてものができてきたね。');
+    setEventGuide('✅','くみたてたよ！','たてものができてきたね','');
+    for(let i=0;i<10;i++)setTimeout(randSpark,i*70);
+    setTimeout(()=>{fadeOut(car,300);zones.forEach(z=>fadeOut(z,250));pieces.forEach(p=>fadeOut(p,250));},700);
+    setTimeout(()=>movePlayer(W,ti),1000);
+    setTimeout(()=>{[car,...zones,...pieces].forEach(e=>{try{e.remove();}catch{}});done();},1700);
   }
 }
 
