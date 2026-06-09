@@ -139,6 +139,8 @@
     @keyframes splashOut  { 0%{opacity:1;transform:scale(.4)} 100%{opacity:0;transform:scale(1.8)} }
     @keyframes puffPop    { 0%{opacity:0;transform:translate(-50%,-50%) scale(.5)} 30%{opacity:1} 100%{opacity:0;transform:translate(-50%,-75%) scale(1.4)} }
     @keyframes workCarArrive { 0%{opacity:0;transform:translateX(90px) scale(.8)} 20%{opacity:1} 100%{opacity:1;transform:translateX(0) scale(1)} }
+    @keyframes buildingReveal { 0%{opacity:0;transform:translate(-50%,-50%) scale(.35) rotate(-4deg)} 38%{opacity:1;transform:translate(-50%,-50%) scale(1.25) rotate(2deg)} 70%{transform:translate(-50%,-50%) scale(.94) rotate(0)} 100%{opacity:1;transform:translate(-50%,-50%) scale(1)} }
+    @keyframes happyBounce { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-12px) scale(1.08)} }
 
     /* HERO BUTTON */
     .map-hero { background: rgba(0,0,0,.28); backdrop-filter: blur(8px); padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); flex-shrink: 0; }
@@ -301,11 +303,15 @@
     .construction-puff svg { width:54px; height:54px; display:block; filter:drop-shadow(0 3px 6px rgba(0,0,0,.25)); animation:puffPop 1s ease forwards; }
     .construction-car { position:absolute; z-index:87; width:72px; height:54px; pointer-events:none; filter:drop-shadow(0 4px 8px rgba(0,0,0,.28)); animation:workCarArrive 1.2s ease both; }
     .construction-car svg { width:100%; height:100%; display:block; }
-    .completion-card { position:fixed; left:16px; right:16px; top:calc(84px + env(safe-area-inset-top)); z-index:110; display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:20px; background:#FFF7CC; border:4px solid #FFE66D; color:#263238; box-shadow:0 8px 22px rgba(0,0,0,.28); animation:slideInRight .35s ease both; }
-    .completion-icon { width:58px; height:58px; flex:0 0 auto; }
+    .completion-card { position:fixed; left:12px; right:12px; top:calc(82px + env(safe-area-inset-top)); z-index:110; display:flex; align-items:center; gap:12px; padding:16px; border-radius:20px; background:#FFF7CC; border:5px solid #FFE66D; color:#263238; box-shadow:0 8px 22px rgba(0,0,0,.28); animation:slideInRight .35s ease both; }
+    .completion-icon { width:66px; height:66px; flex:0 0 auto; }
     .completion-icon svg { width:100%; height:100%; display:block; }
-    .completion-title { font-size:22px; font-weight:bold; line-height:1.2; }
-    .completion-body { font-size:14px; font-weight:bold; color:#5C5142; margin-top:2px; }
+    .completion-title { font-size:24px; font-weight:bold; line-height:1.2; }
+    .completion-body { font-size:15px; font-weight:bold; color:#5C5142; margin-top:3px; }
+    .completion-reveal-building { position:absolute; z-index:92; width:92px; height:92px; transform:translate(-50%,-50%); pointer-events:none; filter:drop-shadow(0 7px 11px rgba(0,0,0,.35)); animation:buildingReveal 1.2s cubic-bezier(.34,1.56,.64,1) both; }
+    .completion-reveal-building svg { width:100%; height:100%; display:block; }
+    .completion-yatta { position:absolute; z-index:96; transform:translate(-50%,-50%); background:#FFE66D; color:#263238; border:4px solid #fff; border-radius:999px; padding:4px 14px; font-size:18px; font-weight:bold; white-space:nowrap; box-shadow:0 4px 12px rgba(0,0,0,.24); animation:popIn .55s cubic-bezier(.34,1.56,.64,1) both; pointer-events:none; }
+    .completion-resident { animation:happyBounce .8s ease-in-out 4; }
 
     /* EVENT SVG */
     .event-svg-wrap { width:64px; height:64px; display:block; animation:firePulse .5s ease-in-out infinite; filter:drop-shadow(0 3px 8px rgba(0,0,0,.35)); }
@@ -2145,13 +2151,13 @@ function completeDueConstructions(s,today=dateString()){
         issue.state='repaired';
         issue.completedOn=today;
         s.buildings[issue.stageIdx??0]=true;
-        s.completedConstructions.push({id:`done-${issue.id}-${today}`,type:'home',stageIdx:issue.stageIdx??0,icon:'🏠',title:'おうちができたよ！',body:'まちがなおったね'});
+        s.completedConstructions.push({id:`done-${issue.id}-${today}`,type:'home',stageIdx:issue.stageIdx??0,icon:'🏠',title:'おうちができたよ！',body:'まちがなおったね',buildingIcon:'🏠'});
         changed=true;
       }else if(issue.type==='police-risk'&&issue.buildStep==='lot'){
         issue.state='lot';
         issue.requiredVehicle='crane';
         issue.completedOn=today;
-        s.completedConstructions.push({id:`done-${issue.id}-lot-${today}`,type:'lot',stageIdx:issue.stageIdx??0,icon:'🚧',title:'よていちができたよ！',body:'つぎはくれーんしゃだよ'});
+        s.completedConstructions.push({id:`done-${issue.id}-lot-${today}`,type:'lot',stageIdx:issue.stageIdx??0,icon:'🚧',title:'よていちができたよ！',body:'つぎはくれーんしゃだよ',buildingIcon:'🚧'});
         changed=true;
       }else if(issue.type==='police-risk'&&issue.buildStep==='station'){
         issue.id='police-station';
@@ -2160,7 +2166,7 @@ function completeDueConstructions(s,today=dateString()){
         issue.requiredVehicle=null;
         issue.completedOn=today;
         s.buildings[issue.stageIdx??0]=true;
-        s.completedConstructions.push({id:`done-police-station-${today}`,type:'police',stageIdx:issue.stageIdx??0,icon:'🏢',title:'けいさつしょができたよ！',body:'まちをまもれるね'});
+        s.completedConstructions.push({id:`done-police-station-${today}`,type:'police',stageIdx:issue.stageIdx??0,icon:'🏢',title:'けいさつしょができたよ！',body:'まちをまもれるね',buildingIcon:'🏢'});
         changed=true;
       }
     }
@@ -2296,22 +2302,53 @@ function showConstructionStarted(issue,vehicleId){
 function showConstructionComplete(content,W,item){
   if(!item)return;
   const scr=document.getElementById('map-scroll');
-  const y=NODE_Y[item.stageIdx]||0;
-  scr.scrollTo({top:Math.max(0,y-scr.clientHeight/2+N/2),behavior:'smooth'});
+  const slot=backgroundSlot(item.stageIdx??0);
+  const focusY=slot.top+35;
+  scr.scrollTo({top:Math.max(0,focusY-scr.clientHeight/2),behavior:'smooth'});
   const card=document.createElement('div');
   card.className='completion-card';
   card.innerHTML=`<div class="completion-icon">${iconSVG(item.icon)}</div><div><div class="completion-title">${item.title}</div><div class="completion-body">${item.body}</div></div>`;
-  document.body.appendChild(card);
-  const slot=backgroundSlot(item.stageIdx??0);
   const leftPos=slot.center.startsWith('calc')?W-57:53;
-  const r1=ea(content,leftPos-34,slot.top+80,42,'','animation:popIn .45s ease both');
-  const r2=ea(content,leftPos+34,slot.top+82,42,'','animation:popIn .45s ease .08s both');
-  r1.innerHTML=personSVG('boy');
-  r2.innerHTML=personSVG('residentHappy');
-  for(let i=0;i<12;i++)setTimeout(randSpark,i*85);
-  soundComplete();
-  speak(item.title.replace('！','。'));
-  setTimeout(()=>{try{card.remove();r1.remove();r2.remove();}catch{}},4200);
+  const smokeBaseY=slot.top+35;
+  setTimeout(()=>{
+    document.body.appendChild(card);
+    const site=ea(content,leftPos,smokeBaseY,48,'🚧','animation:popIn .35s ease both');
+    for(let i=0;i<7;i++){
+      const puff=document.createElement('div');
+      puff.className='construction-puff';
+      puff.style.left=(leftPos+(Math.random()*36-18))+'px';
+      puff.style.top=(smokeBaseY+(Math.random()*22-8))+'px';
+      puff.style.animationDelay=(i*.09)+'s';
+      puff.innerHTML=iconSVG('💨');
+      content.appendChild(puff);
+      setTimeout(()=>{try{puff.remove();}catch{}},1300+i*90);
+    }
+    setTimeout(()=>{
+      fadeOut(site,180);
+      const reveal=document.createElement('div');
+      reveal.className='completion-reveal-building';
+      reveal.style.left=leftPos+'px';
+      reveal.style.top=smokeBaseY+'px';
+      reveal.innerHTML=iconSVG(item.buildingIcon||item.icon||'🏠','map-building-icon');
+      content.appendChild(reveal);
+      const label=document.createElement('div');
+      label.className='completion-yatta';
+      label.style.left=leftPos+'px';
+      label.style.top=(smokeBaseY-64)+'px';
+      label.textContent='できた！';
+      content.appendChild(label);
+      const r1=ea(content,leftPos-36,slot.top+92,44,'','animation:popIn .45s ease both');
+      const r2=ea(content,leftPos+38,slot.top+92,44,'','animation:popIn .45s ease .08s both');
+      r1.classList.add('completion-resident');
+      r2.classList.add('completion-resident');
+      r1.innerHTML=personSVG('boy');
+      r2.innerHTML=personSVG('residentHappy');
+      for(let i=0;i<18;i++)setTimeout(randSpark,i*70);
+      soundComplete();
+      speak(`${item.title.replace('！','。')} ${item.body}。`);
+      setTimeout(()=>{try{card.remove();site.remove();reveal.remove();label.remove();r1.remove();r2.remove();}catch{}},5200);
+    },650);
+  },450);
   state.completedConstructions=(state.completedConstructions||[]).filter(x=>x.id!==item.id);
   save();
 }
